@@ -1,0 +1,5 @@
+console:
+  config:
+    kafka:
+      brokers: 
+        -  my-cluster-kafka-bootstrap:9092
