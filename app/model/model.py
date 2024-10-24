@@ -1,8 +1,14 @@
-from numpy import ndarray
 from sentence_transformers import SentenceTransformer
+from torch import Tensor
+import logging
 
-def get_embedding(input_text: str) -> ndarray:
-    return model.encode(input, convert_to_tensor=True, normalize_embeddings=True)
+logging.basicConfig(level=logging.INFO)
 
-if __name__ == '__main__':
-    model = SentenceTransformer('intfloat/multilingual-e5-large-instruct')
+model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+
+
+# model = SentenceTransformer('intfloat/multilingual-e5-large-instruct')
+
+def get_embedding(input_text: str) -> Tensor:
+    logging.info("encoding embedding for %s", input_text)
+    return model.encode(input_text)

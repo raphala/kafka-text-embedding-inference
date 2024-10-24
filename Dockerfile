@@ -1,4 +1,4 @@
-FROM python:3.11-buster
+FROM python:3.11-buster as builder
 
 RUN pip install poetry==1.4.2
 
@@ -7,15 +7,21 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache
 
-WORKDIR /kafka-python-inference
+WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
 RUN touch README.md
 
-RUN poetry install --without dev --no-root && rm -rf $POETRY_CACHE_DIR
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --no-root
+
+FROM python:3.11-slim-buster as runtime
+
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1
+
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 COPY app ./app
 
-RUN poetry install --without dev
-
-ENTRYPOINT ["poetry", "run", "python", "app/main.py"]
+ENTRYPOINT ["python", "app/main.py"]
