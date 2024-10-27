@@ -1,0 +1,10 @@
+console:
+  config:
+    kafka:
+      brokers: 
+        -  my-cluster-kafka-bootstrap:9092
+    connect:
+      enabled: true
+      clusters:
+        - name: my-connect-cluster
+          url: http://my-cluster-connect:8083

@@ -1,10 +1,13 @@
 import json
+import uuid
 
 from confluent_kafka import Consumer, Producer
 
 from model import model
 
 import logging
+
+# TODO exactly once - producer and consumer
 
 logging.basicConfig(level=logging.INFO)
 
@@ -41,11 +44,22 @@ if __name__ == '__main__':
             logging.info('Received message: %s', decoded_value)
 
             vector = model.get_embedding(decoded_value)
-            vector_json = json.dumps(vector.tolist())
+            # vector_json = json.dumps(vector.tolist())
+
+            qdrant_json = {
+                "collection_name": "embedding",
+                "id": str(uuid.uuid4()),
+                "vector": vector.tolist(),
+                "payload": {
+                    "name": "test",
+                    "description": "this is a test",
+                    "url": "https://test.org/"
+                }
+            }
 
             producer.poll(0)
             logging.info("producing vector")
-            producer.produce(OUTPUT_TOPIC, vector_json)
+            producer.produce(OUTPUT_TOPIC, json.dumps(qdrant_json).encode('utf-8'))
 
 
     finally:
