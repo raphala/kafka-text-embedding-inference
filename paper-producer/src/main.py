@@ -3,7 +3,7 @@ import json
 import requests
 from confluent_kafka import Producer
 
-from paper.paper import extract_papers_from_json
+from paper import extract_papers_from_json
 
 import logging
 

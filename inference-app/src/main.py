@@ -6,6 +6,7 @@ from confluent_kafka import Consumer, Producer
 from model import model
 
 import logging
+from paper import Paper
 
 # TODO exactly once - paper-producer and consumer
 
@@ -33,35 +34,47 @@ if __name__ == '__main__':
 
     try:
         while True:
-            msg = consumer.poll(1.0)
-
-            if msg is None:
+            messages = consumer.consume(num_messages=model.BATCH_SIZE, timeout=1)
+            if len(messages) == 0:
                 continue
-            if msg.error():
-                logging.error("Consumer error: %s", msg.error())
-                continue
-            decoded_json = json.loads(msg.value().decode('utf-8'))
-            value_doi = decoded_json.get('doi', '')
-            value_title = decoded_json.get('title', '')
-            value_abstract = decoded_json.get('abstract', '')
 
-            logging.info('Received message %s with title %s', value_doi, value_title)
+            papers = []
+            for message in messages:
+                if message is None:
+                    continue
+                if message.error():
+                    logging.error("Consumer error: %s", messages.error())
+                    continue
+                decoded_json = json.loads(message.value().decode('utf-8'))
 
-            vector = model.get_embedding(value_abstract)
+                doi = decoded_json.get('doi', '')
+                title = decoded_json.get('title', '')
+                abstract = decoded_json.get('abstract', '')
+                paper = Paper(doi, title, abstract)
+                papers.append(paper)
 
-            qdrant_json = {
-                "collection_name": "embedding",
-                "id": str(uuid.uuid4()),
-                "vector": vector.tolist(),
-                "payload": {
-                    "doi": value_doi,
-                    "title": value_title,
+                logging.info('Received message %s with title %s', doi, title)
+
+            abstract_list = [paper.abstract for paper in papers]
+            vectors = model.get_embedding(abstract_list)
+
+            for i in range(len(papers)):
+                paper = papers[i]
+                vector = vectors[i].tolist()
+                qdrant_json = {
+                    "collection_name": "embedding",
+                    "id": str(uuid.uuid4()),
+                    "vector": vector,
+                    "payload": {
+                        "doi": paper.doi,
+                        "title": paper.title,
+                    }
                 }
-            }
 
-            producer.poll(0)
-            logging.info("producing vector")
-            producer.produce(OUTPUT_TOPIC, json.dumps(qdrant_json).encode('utf-8'))
+                producer.poll(0)
+                logging.info("producing vector from paper %s to topic %s", paper.title, OUTPUT_TOPIC)
+                producer.produce(OUTPUT_TOPIC, json.dumps(qdrant_json).encode('utf-8'))
+            logging.info("produced %i vectors to topic %s", model.BATCH_SIZE, OUTPUT_TOPIC)
 
 
     finally:
