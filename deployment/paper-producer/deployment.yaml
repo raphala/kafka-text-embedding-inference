@@ -1,0 +1,18 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: paper-producer
+  namespace: kafka
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: paper-producer
+    spec:
+      containers:
+      - name: paper-producer
+        image: paper-producer:latest
+        imagePullPolicy: Never
+      restartPolicy: Never

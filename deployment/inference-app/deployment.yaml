@@ -2,19 +2,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kafka-python-inference
+  name: inference-app
   namespace: kafka
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kafka-python-inference
+      app: inference-app
   template:
     metadata:
       labels:
-        app: kafka-python-inference
+        app: inference-app
     spec:
       containers:
-      - name: kafka-python-inference
-        image: kafka-python-inference:latest
+      - name: inference-app
+        image: inference-app:latest
         imagePullPolicy: Never

@@ -7,7 +7,7 @@ from model import model
 
 import logging
 
-# TODO exactly once - producer and consumer
+# TODO exactly once - paper-producer and consumer
 
 logging.basicConfig(level=logging.INFO)
 
@@ -40,20 +40,23 @@ if __name__ == '__main__':
             if msg.error():
                 logging.error("Consumer error: %s", msg.error())
                 continue
-            decoded_value = msg.value().decode('utf-8')
-            logging.info('Received message: %s', decoded_value)
+            decoded_json = json.loads(msg.value().decode('utf-8'))
+            value_doi = decoded_json.get('doi', '')
+            value_title = decoded_json.get('title', '')
+            value_abstract = decoded_json.get('abstract', '')
 
-            vector = model.get_embedding(decoded_value)
-            # vector_json = json.dumps(vector.tolist())
+
+            logging.info('Received message %s with title %s', value_doi, value_title)
+
+            vector = model.get_embedding(value_abstract)
 
             qdrant_json = {
                 "collection_name": "embedding",
                 "id": str(uuid.uuid4()),
                 "vector": vector.tolist(),
                 "payload": {
-                    "name": "test",
-                    "description": "this is a test",
-                    "url": "https://test.org/"
+                    "doi": value_doi,
+                    "title": value_title,
                 }
             }
 
