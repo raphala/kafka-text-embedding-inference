@@ -37,9 +37,11 @@ class Paper:
         return json.dumps(paper_dict)
 
 
-def extract_papers_from_json(json_data):
+def extract_papers_from_json(json_data) -> tuple[str, list]:
     papers = []
     data = json.loads(json_data)
+
+    next_cursor_mark = data.get('nextCursorMark', '')
 
     # Extract the result list
     results = data.get('resultList', {}).get('result', [])
@@ -52,4 +54,4 @@ def extract_papers_from_json(json_data):
         paper = Paper(doi, title, abstract)
         papers.append(paper)
 
-    return papers
+    return next_cursor_mark, papers

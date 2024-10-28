@@ -45,7 +45,6 @@ if __name__ == '__main__':
             value_title = decoded_json.get('title', '')
             value_abstract = decoded_json.get('abstract', '')
 
-
             logging.info('Received message %s with title %s', value_doi, value_title)
 
             vector = model.get_embedding(value_abstract)
