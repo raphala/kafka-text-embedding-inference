@@ -1,7 +1,7 @@
 import json
 import logging
 
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, TopicPartition
 
 import model
 import producer
@@ -23,8 +23,10 @@ def run_consumer():
 
             papers = extract_papers(messages)
             inferred_papers = infer_embeddings(papers)
-            producer.produce_papers(inferred_papers)
-
+            group_metadata = consumer.consumer_group_metadata()
+            producer.produce_papers(inferred_papers, get_offsets(messages), group_metadata)
+    except Exception as e:
+        print(f"Consumption failed: {e}")
 
     finally:
         consumer.close()
@@ -56,3 +58,11 @@ def infer_embeddings(papers: list[Paper]) -> list[Paper]:
     for i in range(len(papers)):
         papers[i].embedding_vector = vectors[i]
     return papers
+
+
+def get_offsets(messages):
+    offsets = []
+    for message in messages:
+        tp = TopicPartition(message.topic(), message.partition(), message.offset() + 1)
+        offsets.append(tp)
+    return offsets
