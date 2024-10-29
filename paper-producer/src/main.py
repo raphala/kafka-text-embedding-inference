@@ -1,11 +1,10 @@
 import json
+import logging
 
 import requests
 from confluent_kafka import Producer
 
 from paper import extract_papers_from_json
-
-import logging
 
 logging.basicConfig(level=logging.INFO)
 

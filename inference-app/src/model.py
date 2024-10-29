@@ -1,8 +1,9 @@
-from sentence_transformers import SentenceTransformer
-from torch import Tensor
 import logging
 
-BATCH_SIZE = 10
+from sentence_transformers import SentenceTransformer
+from torch import Tensor
+
+from main import BATCH_SIZE
 
 logging.basicConfig(level=logging.INFO)
 
