@@ -3,9 +3,9 @@ import logging
 
 from confluent_kafka import Consumer
 
+import model
 import producer
 from main import CONSUMER_CONFIG, INPUT_TOPIC, BATCH_SIZE
-from model import model
 from paper import Paper
 
 logging.basicConfig(level=logging.INFO)

@@ -4,14 +4,12 @@ import uuid
 
 from confluent_kafka import Producer
 
-from main import PRODUCER_CONFIG, OUTPUT_TOPIC
-from model import model
+from main import PRODUCER_CONFIG, OUTPUT_TOPIC, BATCH_SIZE
 from paper import Paper
 
 logging.basicConfig(level=logging.INFO)
 
-if __name__ == '__main__':
-    producer = Producer(PRODUCER_CONFIG)
+producer = Producer(PRODUCER_CONFIG)
 
 
 def produce_papers(papers: list[Paper]):
@@ -19,7 +17,7 @@ def produce_papers(papers: list[Paper]):
         qdrant_json = {
             "collection_name": "embedding",
             "id": str(uuid.uuid4()),
-            "vector": paper.embedding_vector,
+            "vector": paper.embedding_vector.tolist(),
             "payload": {
                 "doi": paper.doi,
                 "title": paper.title,
@@ -30,4 +28,4 @@ def produce_papers(papers: list[Paper]):
         producer.produce(OUTPUT_TOPIC, json.dumps(qdrant_json).encode('utf-8'))
 
     producer.flush()
-    logging.info("produced %i vectors to topic %s", model.BATCH_SIZE, OUTPUT_TOPIC)
+    logging.info("produced %i vectors to topic %s", BATCH_SIZE, OUTPUT_TOPIC)
