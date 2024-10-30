@@ -10,7 +10,7 @@ python = "^3.9"
 confluent-kafka = "^2.6.0"
 torch = "^2.5.0"
 transformers = "^4.45.2"
-sentence-transformers = "^3.2.1"
+sentence-transformers = {extras = ["onnx"], version = "^3.2.1"}
 
 
 [build-system]
