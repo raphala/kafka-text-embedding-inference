@@ -7,7 +7,7 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache
 
-WORKDIR /inference-app
+WORKDIR /chunking-app
 
 COPY pyproject.toml poetry.lock ./
 RUN touch README.md
@@ -16,11 +16,11 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --n
 
 FROM python:3.12-slim-bookworm AS runtime
 
-ENV VIRTUAL_ENV=/inference-app/.venv \
-    PATH="/inference-app/.venv/bin:$PATH"
+ENV VIRTUAL_ENV=/chunking-app/.venv \
+    PATH="/chunking-app/.venv/bin:$PATH"
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-COPY inference-app ./inference-app
+COPY chunking-app ./chunking-app
 
-ENTRYPOINT ["python", "inference-app/src/main.py"]
+ENTRYPOINT ["python", "chunking-app/src/main.py"]

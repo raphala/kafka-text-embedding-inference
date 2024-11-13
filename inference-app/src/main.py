@@ -11,7 +11,7 @@ import consumer
 logging.basicConfig(level=logging.INFO)
 
 BOOTSTRAP_SERVER = 'my-cluster-kafka-bootstrap:9092'
-INPUT_TOPIC = 'input'
+INPUT_TOPIC = 'chunked'
 OUTPUT_TOPIC = 'embedding'
 BATCH_SIZE = 64
 

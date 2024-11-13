@@ -1,0 +1,20 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chunking-app
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chunking-app
+  template:
+    metadata:
+      labels:
+        app: chunking-app
+    spec:
+      containers:
+      - name: chunking-app
+        image: chunking-app:latest
+        imagePullPolicy: Never
