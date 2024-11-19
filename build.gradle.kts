@@ -1,9 +1,10 @@
 plugins {
     id("java")
     id("com.google.protobuf") version "0.9.4"
+    id("com.google.cloud.tools.jib") version "3.4.4"
 }
 
-group = "at.raphaell.inference"
+group = "com.bakdata.clickhouse"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -44,4 +45,10 @@ protobuf {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+jib {
+    to {
+        image = "us.gcr.io/gcp-bakdata-cluster/kafka-streams-inference-test:" + project.version
+    }
 }
