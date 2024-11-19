@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 import requests
 from confluent_kafka import Producer
@@ -8,7 +9,7 @@ from paper import extract_papers_from_json
 
 logging.basicConfig(level=logging.INFO)
 
-BOOTSTRAP_SERVER = 'my-cluster-kafka-bootstrap:9092'
+BOOTSTRAP_SERVER = os.environ.get("BOOTSTRAP_SERVER", "localhost:9092")
 OUTPUT_TOPIC = 'input'
 
 PAPER_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=*&resultType=core&pageSize=1000&format=json"
