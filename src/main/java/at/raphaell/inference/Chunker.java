@@ -6,28 +6,24 @@ import java.util.List;
 
 public class Chunker {
 
-    //    TODO make cli var
+    //    TODO make var
     private static final int CHUNK_SIZE = 128;
     private static final int CHUNK_OVERLAP = 32;
 
     public static List<ChunksWithPaper> createChunks(final Paper paper) {
         final String inputText = paper.abstract_();
         final List<ChunksWithPaper> chunks = new ArrayList<>();
-        final int textLength = paper.abstract_().length();
+
+
+        int textLength = inputText.length();
         int start = 0;
 
         while (start < textLength) {
             int end = Math.min(start + CHUNK_SIZE, textLength);
+            String chunk = inputText.substring(start, end);
+            chunks.add(new ChunksWithPaper(chunk, paper));
 
-            // Adjust end to avoid breaking words
-            if (end < textLength && !Character.isWhitespace(inputText.charAt(end))) {
-                while (end > start && !Character.isWhitespace(inputText.charAt(end - 1))) {
-                    end--;
-                }
-            }
-
-            chunks.add(new ChunksWithPaper(inputText.substring(start, end).trim(), paper));
-            start = end - CHUNK_OVERLAP;
+            start += (CHUNK_SIZE - CHUNK_OVERLAP);
         }
 
         return chunks;

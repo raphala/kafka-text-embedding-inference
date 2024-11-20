@@ -20,9 +20,12 @@ dependencies {
     implementation("javax.annotation:javax.annotation-api:1.3.2")
     implementation("com.fasterxml.jackson.core:jackson-core:2.18.1")
     implementation("io.confluent:kafka-streams-json-schema-serde:7.7.1")
+    implementation("info.picocli:picocli:4.7.6")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("com.bakdata.fluent-kafka-streams-tests:fluent-kafka-streams-tests-junit5:2.15.0")
+    testImplementation("org.assertj:assertj-core:3.26.3")
 }
 
 protobuf {
