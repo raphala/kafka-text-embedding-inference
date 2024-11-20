@@ -6,24 +6,26 @@ import java.util.List;
 
 public class Chunker {
 
-    //    TODO make var
-    private static final int CHUNK_SIZE = 128;
-    private static final int CHUNK_OVERLAP = 32;
+    private final int chunkSize;
+    private final int chunkOverlap;
 
-    public static List<ChunksWithPaper> createChunks(final Paper paper) {
+    public Chunker(final int chunkSize, final int chunkOverlap) {
+        this.chunkSize = chunkSize;
+        this.chunkOverlap = chunkOverlap;
+    }
+
+    public List<ChunksWithPaper> createChunks(final Paper paper) {
         final String inputText = paper.abstract_();
         final List<ChunksWithPaper> chunks = new ArrayList<>();
+        final int textLength = inputText.length();
 
-
-        int textLength = inputText.length();
         int start = 0;
-
         while (start < textLength) {
-            int end = Math.min(start + CHUNK_SIZE, textLength);
-            String chunk = inputText.substring(start, end);
+            final int end = Math.min(start + this.chunkSize, textLength);
+            final String chunk = inputText.substring(start, end);
             chunks.add(new ChunksWithPaper(chunk, paper));
 
-            start += (CHUNK_SIZE - CHUNK_OVERLAP);
+            start += (this.chunkSize - this.chunkOverlap);
         }
 
         return chunks;

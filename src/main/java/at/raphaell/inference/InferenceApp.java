@@ -22,6 +22,10 @@ public class InferenceApp extends KafkaStreamsApplication {
     private String host;
     @Option(names = "--port", description = "the port of the grpc inference service", required = true)
     private int port;
+    @Option(names = "--chunk-size", description = "the size of individual chunks to embed", required = true)
+    private int chunkSize;
+    @Option(names = "--chunk-overlap", description = "the overlap between chunks", required = true)
+    private int chunkOverlap;
 
     @Nullable
     private EmbedClient embedClient = null;
@@ -39,15 +43,17 @@ public class InferenceApp extends KafkaStreamsApplication {
         return new StreamsApp() {
             @Override
             public void buildTopology(final TopologyBuilder builder) {
-                InferenceApp.this.embedClient = new EmbedClient(ManagedChannelBuilder.forAddress(InferenceApp.this.host, InferenceApp.this.port)
-                        .usePlaintext()
-                        .build());
+                InferenceApp.this.embedClient =
+                        new EmbedClient(ManagedChannelBuilder.forAddress(InferenceApp.this.host, InferenceApp.this.port)
+                                .usePlaintext()
+                                .build());
+                final Chunker chunker = new Chunker(InferenceApp.this.chunkSize, InferenceApp.this.chunkOverlap);
 
                 final Serde<Paper> paperSerde = SerdeUtils.getSerde(Paper.class, builder.getKafkaProperties());
                 final Serde<EmbeddedPaper> embeddedPaperSerde =
                         SerdeUtils.getSerde(EmbeddedPaper.class, builder.getKafkaProperties());
                 final InferenceConfig inferenceConfig =
-                        new InferenceConfig(InferenceApp.this.embedClient, paperSerde, embeddedPaperSerde);
+                        new InferenceConfig(InferenceApp.this.embedClient, paperSerde, embeddedPaperSerde, chunker);
                 new InferenceTopology(inferenceConfig).buildTopology(builder);
                 InferenceApp.this.kafkaProperties = builder.getKafkaProperties();
                 InferenceApp.this.topology = builder.getStreamsBuilder().build();
@@ -67,11 +73,11 @@ public class InferenceApp extends KafkaStreamsApplication {
 
     @Nullable
     public Topology getTopology() {
-        return topology;
+        return this.topology;
     }
 
     @Nullable
     public Map<String, Object> getKafkaProperties() {
-        return kafkaProperties;
+        return this.kafkaProperties;
     }
 }

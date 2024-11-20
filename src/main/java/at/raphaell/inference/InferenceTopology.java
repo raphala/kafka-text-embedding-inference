@@ -15,9 +15,10 @@ public record InferenceTopology(InferenceConfig inferenceConfig) {
                 builder.streamInput(Consumed.with(Serdes.String(), this.inferenceConfig.inputSerde()));
 
 //        TODO Error handling
-        final KStream<String, EmbeddedPaper> embeddedPapers = input.flatMapValues(Chunker::createChunks)
-                .mapValues(value -> EmbeddedPaper.fromPaper(value.paper(),
-                        this.inferenceConfig.embedClient().embed(value.chunk())));
+        final KStream<String, EmbeddedPaper> embeddedPapers =
+                input.flatMapValues(this.inferenceConfig.chunker()::createChunks)
+                        .mapValues(value -> EmbeddedPaper.fromPaper(value.paper(),
+                                this.inferenceConfig.embedClient().embed(value.chunk())));
 
         embeddedPapers.to(builder.getTopics().getOutputTopic(),
                 Produced.with(Serdes.String(), this.inferenceConfig.outputSerde()));
