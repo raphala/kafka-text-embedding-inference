@@ -21,6 +21,7 @@ ENV VIRTUAL_ENV=/inference-app/.venv \
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-COPY inference-app ./inference-app
+COPY src ./src
+COPY schemas/ ./schemas/
 
-ENTRYPOINT ["python", "inference-app/src/main.py"]
+ENTRYPOINT ["python", "src/main.py"]

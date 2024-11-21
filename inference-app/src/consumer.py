@@ -7,6 +7,7 @@ import model
 import producer
 from main import CONSUMER_CONFIG, INPUT_TOPIC, BATCH_SIZE
 from paper import Paper
+from chunker import create_chunks
 
 logging.basicConfig(level=logging.INFO)
 
@@ -22,7 +23,8 @@ def run_consumer():
                 continue
 
             papers = extract_papers(messages)
-            inferred_papers = infer_embeddings(papers)
+            chunked_papers = [create_chunks(paper) for paper in papers]
+            inferred_papers = infer_embeddings(chunked_papers)
             group_metadata = consumer.consumer_group_metadata()
             producer.produce_papers(inferred_papers, get_offsets(messages), group_metadata)
     except Exception as e:
