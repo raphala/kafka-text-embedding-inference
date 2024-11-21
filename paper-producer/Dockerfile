@@ -21,6 +21,7 @@ ENV VIRTUAL_ENV=/paper-producer/.venv \
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-COPY paper-producer ./paper-producer
+COPY src ./src
+COPY schemas/ ./schemas/
 
-ENTRYPOINT ["python", "paper-producer/src/main.py"]
+ENTRYPOINT ["python", "src/main.py"]

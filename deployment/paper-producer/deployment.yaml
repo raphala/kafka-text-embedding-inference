@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: paper-producer
-  namespace: kafka
+  namespace: personal-raphael-lachtner
 spec:
   backoffLimit: 0
   template:
@@ -13,6 +13,13 @@ spec:
     spec:
       containers:
       - name: paper-producer
-        image: paper-producer:latest
-        imagePullPolicy: Never
+        image: us.gcr.io/gcp-bakdata-cluster/kafka-python-inference-producer:latest
+        imagePullPolicy: Always
+        env:
+          - name: BOOTSTRAP_SERVER
+            value: "strimzi-k8kafka-kafka-bootstrap.infrastructure.svc:9092"
+          - name: SCHEMA_REGISTRY
+            value: "http://k8kafka-cp-schema-registry.infrastructure.svc.cluster.local:8081"
+          - name: OUTPUT_TOPIC
+            value: "inference-test-paper"
       restartPolicy: Never
