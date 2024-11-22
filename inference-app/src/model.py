@@ -7,7 +7,7 @@ from main import BATCH_SIZE
 
 logging.basicConfig(level=logging.INFO)
 
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2', backend="onnx")
+model = SentenceTransformer('sentence-transformers/msmarco-bert-base-dot-v5', backend="onnx")
 
 
 def get_embedding(input_text: str) -> Tensor:

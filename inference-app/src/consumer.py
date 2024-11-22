@@ -1,19 +1,18 @@
 import json
 import logging
 
-from confluent_kafka import Consumer, TopicPartition
+from confluent_kafka import TopicPartition, DeserializingConsumer
 
 import model
-import producer
-from main import CONSUMER_CONFIG, INPUT_TOPIC, BATCH_SIZE
-from paper import Paper
 from chunker import create_chunks
+from main import INPUT_TOPIC, BATCH_SIZE
+from paper import Paper
 
 logging.basicConfig(level=logging.INFO)
 
 
-def run_consumer():
-    consumer = Consumer(CONSUMER_CONFIG)
+def run_consumer(config, producer):
+    consumer = DeserializingConsumer(config)
     consumer.subscribe([INPUT_TOPIC])
 
     try:

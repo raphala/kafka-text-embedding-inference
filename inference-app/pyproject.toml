@@ -4,6 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["raphala <22345578+raphala@users.noreply.github.com>"]
 readme = "README.md"
+include = [
+    "schemas/*.json"
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.13"
@@ -11,8 +14,7 @@ confluent-kafka = "^2.6.0"
 requests = "^2.32.3"
 jsonschema = "^4.23.0"
 torch = "^2.5.0"
-sentence-transformers = {extras = ["onnx"], version = "^3.2.1"}
-fastembed = "^0.4.2"
+sentence-transformers = {extras = ["onnx-gpu"], version = "^3.2.1"}
 
 [build-system]
 requires = ["poetry-core"]
