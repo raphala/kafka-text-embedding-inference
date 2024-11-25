@@ -22,8 +22,13 @@ def run_consumer(config, producer):
                 continue
 
             papers = extract_papers(messages)
-            chunked_papers = [create_chunks(paper) for paper in papers]
-            inferred_papers = infer_embeddings(chunked_papers)
+            paper_chunks = []
+            for paper in papers:
+                chunks = create_chunks(paper)
+                paper_chunks.extend(chunks)
+
+            inferred_papers = infer_embeddings(paper_chunks)
+
             group_metadata = consumer.consumer_group_metadata()
             producer.produce_papers(inferred_papers, get_offsets(messages), group_metadata)
     except Exception as e:
@@ -55,6 +60,7 @@ def extract_papers(messages) -> list[Paper]:
 
 def infer_embeddings(papers: list[Paper]) -> list[Paper]:
     abstract_list = [paper.abstract for paper in papers]
+    logging.info("encoding embedding for %i paper chunks", len(papers))
     vectors = model.get_embedding(abstract_list)
     for i in range(len(papers)):
         papers[i].embedding_vector = vectors[i]

@@ -5,7 +5,7 @@ from paper import with_chunk, Paper
 logging.basicConfig(level=logging.INFO)
 
 
-def create_chunks(self, paper) -> Paper:
+def create_chunks(self, paper) -> list[Paper]:
     input_text = paper.abstract_()
     chunks = []
     text_length = len(input_text)
