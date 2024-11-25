@@ -69,6 +69,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libreadline8 \
     libncursesw6 \
     ca-certificates \
+    libcudnn8 \
+    libcudnn8-dev \
+    libnccl2 \
+    libnccl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry using pip
