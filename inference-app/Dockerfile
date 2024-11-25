@@ -52,8 +52,9 @@ FROM nvidia/cuda:12.6.2-runtime-ubuntu22.04
 # Copy Python 3.12 from the builder stage
 COPY --from=builder /usr/local /usr/local
 
-# Create symlink for python3.12
-RUN ln -s /usr/local/bin/python3.12 /usr/local/bin/python
+# Create symlinks for python3.12 and pip3.12
+RUN ln -s /usr/local/bin/python3.12 /usr/local/bin/python && \
+    ln -s /usr/local/bin/pip3.12 /usr/local/bin/pip
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -70,9 +71,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
+# Install Poetry using pip
 RUN python -m ensurepip --upgrade && \
-    pip install --no-cache-dir poetry
+    python -m pip install --no-cache-dir --quiet poetry
 
 # Set PATH for Poetry
 ENV PATH="/root/.local/bin:$PATH"
@@ -91,7 +92,7 @@ RUN poetry config virtualenvs.create false && \
 COPY src/ ./src/
 COPY schemas/ ./schemas/
 
-# Set environment variables for NVIDIA and CUDA (if necessary)
+# Set environment variables for NVIDIA and CUDA
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 ENV LD_LIBRARY_PATH /usr/local/cuda/lib64:$LD_LIBRARY_PATH
