@@ -13,8 +13,8 @@ python = ">=3.10, <3.13"
 confluent-kafka = "^2.6.0"
 requests = "^2.32.3"
 jsonschema = "^4.23.0"
-torch = "^2.5.0"
-sentence-transformers = {extras = ["onnx-gpu"], version = "^3.2.1"}
+fastembed = {version = "^0.4.2", platform = "darwin"}
+fastembed-gpu = {version = "^0.4.2", platform = "linux"}
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,105 +1,59 @@
-############################
-# Stage 1: Build Python 3.12
-############################
-FROM nvidia/cuda:12.6.2-devel-ubuntu22.04 AS builder
+FROM python:3.12-bookworm AS builder
 
-# Set environment variables
-ENV PYTHON_VERSION=3.12.0
-ENV DEBIAN_FRONTEND=noninteractive
+RUN pip install poetry==1.4.2
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    wget \
-    libssl-dev \
-    zlib1g-dev \
-    libncurses5-dev \
-    libncursesw5-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    libgdbm-dev \
-    libdb5.3-dev \
-    libbz2-dev \
-    libexpat1-dev \
-    liblzma-dev \
-    tk-dev \
-    libffi-dev \
-    uuid-dev \
-    libnss3-dev \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache \
+    PYTHONUNBUFFERED=1
 
-# Download and extract Python source code
-RUN wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz && \
-    tar xzf Python-$PYTHON_VERSION.tgz && \
-    rm Python-$PYTHON_VERSION.tgz
-
-# Build and install Python
-WORKDIR /Python-$PYTHON_VERSION
-RUN ./configure --enable-optimizations --prefix=/usr/local && \
-    make -j$(nproc) && \
-    make altinstall
-
-# Clean up build dependencies and Python source
-RUN apt-get purge -y --auto-remove build-essential wget && \
-    rm -rf /Python-$PYTHON_VERSION
-
-############################
-# Stage 2: Final image
-############################
-FROM nvidia/cuda:12.6.2-runtime-ubuntu22.04
-
-# Copy Python 3.12 from the builder stage
-COPY --from=builder /usr/local /usr/local
-
-# Create symlinks for python3.12 and pip3.12
-RUN ln -s /usr/local/bin/python3.12 /usr/local/bin/python && \
-    ln -s /usr/local/bin/pip3.12 /usr/local/bin/pip
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libssl3 \
-    libbz2-1.0 \
-    libffi7 \
-    liblzma5 \
-    libsqlite3-0 \
-    libnss3 \
-    zlib1g \
-    libgdbm6 \
-    libreadline8 \
-    libncursesw6 \
-    ca-certificates \
-    libcudnn8 \
-    libcudnn8-dev \
-    libnccl2 \
-    libnccl-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Poetry using pip
-RUN python -m ensurepip --upgrade && \
-    python -m pip install --no-cache-dir --quiet poetry
-
-# Set PATH for Poetry
-ENV PATH="/root/.local/bin:$PATH"
-
-# Set working directory
 WORKDIR /inference-app
 
-# Copy Poetry configuration files
 COPY pyproject.toml poetry.lock ./
+RUN touch README.md
 
-# Install project dependencies (without dev dependencies)
-RUN poetry config virtualenvs.create false && \
-    poetry install --no-dev --no-interaction --no-ansi
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --no-root
 
-# Copy application source code
-COPY src/ ./src/
+FROM python:3.12-slim-bookworm AS runtime
+
+# Install essential packages
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    gnupg2 \
+    ca-certificates
+
+# Add NVIDIA Container Toolkit repositories
+RUN curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+    && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+# Update package lists and install NVIDIA Container Toolkit
+RUN apt-get update \
+    && apt-get install -y nvidia-container-toolkit
+
+RUN apt-get install -y software-properties-common
+
+# Download and install CUDA and cuDNN libraries
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb && \
+    dpkg -i cuda-keyring_1.1-1_all.deb && \
+    add-apt-repository contrib && \
+    apt-get update && apt-get upgrade -y && \
+    apt-get install -y libcudnn9-cuda-12 libcudnn9-dev-cuda-12 cuda-toolkit-12-6
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+# CUDNN from nvidia-cudnn-cu12 python package is located in the site-packages directory of python virtual environment.
+ENV LD_LIBRARY_PATH="/usr/local/lib/python3.12/site-packages/nvidia/cudnn/lib:/usr/local/cuda/lib64"
+
+ENV VIRTUAL_ENV=/inference-app/.venv \
+    PATH="/inference-app/.venv/bin:$PATH"
+
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+COPY src ./src
 COPY schemas/ ./schemas/
 
-# Set environment variables for NVIDIA and CUDA
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-ENV LD_LIBRARY_PATH /usr/local/cuda/lib64:$LD_LIBRARY_PATH
-
-# Set the entrypoint
-CMD ["python", "src/main.py"]
+ENTRYPOINT ["python", "src/main.py"]
