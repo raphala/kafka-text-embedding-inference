@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: inference-app
-  namespace: kafka
+  namespace: personal-raphael-lachtner
 spec:
   replicas: 1
   selector:
@@ -15,6 +15,26 @@ spec:
         app: inference-app
     spec:
       containers:
-      - name: inference-app
-        image: inference-app:latest
-        imagePullPolicy: Never
+        - name: inference-app
+          image: us.gcr.io/gcp-bakdata-cluster/kafka-python-inference-app:latest
+          imagePullPolicy: Always
+          env:
+            - name: BOOTSTRAP_SERVER
+              value: "strimzi-k8kafka-kafka-bootstrap.infrastructure.svc:9092"
+            - name: SCHEMA_REGISTRY
+              value: "http://k8kafka-cp-schema-registry.infrastructure.svc.cluster.local:8081"
+            - name: INPUT_TOPIC
+              value: "inference-test-paper"
+            - name: OUTPUT_TOPIC
+              value: "inference-test-embedded-paper"
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+              nvidia.com/gpu: "1"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4

@@ -1,0 +1,20 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference-app
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inference-app
+  template:
+    metadata:
+      labels:
+        app: inference-app
+    spec:
+      containers:
+      - name: inference-app
+        image: us.gcr.io/gcp-bakdata-cluster/kafka-python-inference-app:latest
+        imagePullPolicy: Always
