@@ -1,14 +1,15 @@
 import json
-import logging
-import os
 from pathlib import Path
 
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.json_schema import JSONSerializer, JSONDeserializer
-from confluent_kafka.serialization import StringSerializer, StringDeserializer
+from confluent_kafka.serialization import StringDeserializer
 
 import consumer
+from config import SCHEMA_REGISTRY, BOOTSTRAP_SERVER, OUTPUT_TOPIC, BATCH_SIZE, CHUNK_SIZE, CHUNK_OVERLAP, \
+    EXECUTION_PROVIDER
 from embeddingproducer import EmbeddingProducer
+from logger import logger
 from paper import dict_to_paper
 
 # TODO exactly once - paper-producer and consumer
@@ -17,17 +18,6 @@ from paper import dict_to_paper
 # TODO avro/protobuf support
 # TODO autoscaling - scaling with transactional api?
 
-logging.basicConfig(level=logging.INFO)
-
-# TODO move to other file
-SCHEMA_REGISTRY = os.environ.get("SCHEMA_REGISTRY", "localhost:8081")
-BOOTSTRAP_SERVER = os.environ.get("BOOTSTRAP_SERVER", "localhost:9092")
-INPUT_TOPIC = os.environ.get("INPUT_TOPIC", "paper-embedded")
-OUTPUT_TOPIC = os.environ.get("OUTPUT_TOPIC", "paper")
-EXECUTION_PROVIDER = os.environ.get("EXECUTION_PROVIDER", "CPUExecutionProvider")
-CHUNK_SIZE = 512
-CHUNK_OVERLAP = 32
-BATCH_SIZE = 32
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
@@ -41,6 +31,8 @@ def load_schema(schema_name: str) -> dict:
 
 
 if __name__ == '__main__':
+    logger.info("Starting inference app with provider %s, chunk size %i, chunk overlap %i, batch size %i",
+                EXECUTION_PROVIDER, CHUNK_SIZE, CHUNK_OVERLAP, BATCH_SIZE)
     schema_registry_conf = {'url': SCHEMA_REGISTRY}
     schema_registry_client = SchemaRegistryClient(schema_registry_conf)
     string_deserializer = StringDeserializer('utf_8')
@@ -68,8 +60,7 @@ if __name__ == '__main__':
     }
 
     producer = EmbeddingProducer(producer_config, qdrant_json_serializer, OUTPUT_TOPIC)
-    consumer.run_consumer(consumer_config, producer, INPUT_TOPIC, BATCH_SIZE, CHUNK_OVERLAP, CHUNK_SIZE,
-                          paper_json_deserializer)
+    consumer.run_consumer(consumer_config, producer, paper_json_deserializer)
 
 # TODO clean up env variables
 # TODO add switch gpu/cpu to env variables

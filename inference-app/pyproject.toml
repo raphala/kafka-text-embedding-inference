@@ -11,7 +11,6 @@ include = [
 [tool.poetry.dependencies]
 python = ">=3.10, <3.13"
 confluent-kafka = "^2.6.0"
-requests = "^2.32.3"
 jsonschema = "^4.23.0"
 fastembed = { version = "^0.4.2" }
 

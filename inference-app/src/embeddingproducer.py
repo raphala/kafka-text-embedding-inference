@@ -1,12 +1,10 @@
-import logging
 import uuid
 
 from confluent_kafka import SerializingProducer
 from confluent_kafka.serialization import SerializationContext, MessageField, StringSerializer
 
+from logger import logger
 from paper import Paper
-
-logging.basicConfig(level=logging.INFO)
 
 
 class EmbeddingProducer:
@@ -34,15 +32,16 @@ class EmbeddingProducer:
                     }
                 }
                 serialized_key = self.key_serializer(embedding_id, SerializationContext(self.topic, MessageField.VALUE))
-                serialized_value = self.value_serializer(qdrant_json, SerializationContext(self.topic, MessageField.VALUE))
+                serialized_value = self.value_serializer(qdrant_json,
+                                                         SerializationContext(self.topic, MessageField.VALUE))
                 self.producer.poll(0)
                 self.producer.produce(topic=self.topic, key=serialized_key, value=serialized_value)
 
             self.producer.send_offsets_to_transaction(offsets, group_metadata)
             self.producer.commit_transaction()
-            logging.info("produced %i vectors to topic %s", len(papers), self.topic)
+            logger.info("produced %i vectors to topic %s", len(papers), self.topic)
         except Exception as e:
-            logging.exception("Transaction failed", e)
+            logger.exception("Transaction failed", e)
             self.producer.abort_transaction()
 
         finally:

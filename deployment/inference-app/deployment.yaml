@@ -27,6 +27,18 @@ spec:
               value: "inference-test-paper"
             - name: OUTPUT_TOPIC
               value: "inference-test-embedded-paper"
+            - name: EXECUTION_PROVIDER
+              value: "CPUExecutionProvider"
+            - name: EMBEDDING_MODEL
+              value: "sentence-transformers/all-MiniLM-L6-v2"
+            - name: CHUNK_SIZE
+              value: 512
+            - name: CHUNK_OVERLAP
+              value: 32
+            - name: BATCH_SIZE
+              value: 32
+            - name: LOG_LEVEL
+              value: "INFO"
           resources:
             requests:
               cpu: "1"
