@@ -39,7 +39,7 @@ class EmbeddingProducer:
 
             self.producer.send_offsets_to_transaction(offsets, group_metadata)
             self.producer.commit_transaction()
-            logger.info("produced %i vectors to topic %s", len(papers), self.topic)
+            logger.info("Produced %i vectors to topic %s", len(papers), self.topic)
         except Exception as e:
             logger.exception("Transaction failed", e)
             self.producer.abort_transaction()

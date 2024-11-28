@@ -57,7 +57,7 @@ def extract_papers(messages, value_deserializer) -> list[Paper]:
 
 def infer_embeddings(papers: list[Paper]) -> list[Paper]:
     abstract_list = [paper.abstract for paper in papers]
-    logger.info("encoding embedding for %i paper chunks", len(papers))
+    logger.info("Encoding embedding for %i paper chunks", len(papers))
     vectors = list(model.get_embedding(abstract_list))
     for i, vector in enumerate(vectors):
         papers[i].embedding_vector = vector

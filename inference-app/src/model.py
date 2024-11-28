@@ -9,5 +9,5 @@ model = TextEmbedding(model_name=EMBEDDING_MODEL, providers=[EXECUTION_PROVIDER]
 
 
 def get_embedding(input_text: list[str]) -> list[np.ndarray]:
-    logger.info("encoding %i embeddings", len(input_text))
+    logger.info("Encoding %i embeddings", len(input_text))
     return model.embed(input_text)
