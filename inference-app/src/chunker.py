@@ -5,17 +5,16 @@ from paper import with_chunk, Paper
 logging.basicConfig(level=logging.INFO)
 
 
-def create_chunks(self, paper) -> list[Paper]:
-    input_text = paper.abstract_()
+def create_chunks(paper, chunk_overlap, chunk_size) -> list[Paper]:
+    input_text = paper.abstract
     chunks = []
     text_length = len(input_text)
     start = 0
 
     while start < text_length:
-        end = min(start + self.chunk_size, text_length)
+        end = min(start + chunk_size, text_length)
         chunk = input_text[start:end]
         chunks.append(with_chunk(paper, chunk))
-        start += self.chunk_size - self.chunk_overlap
+        start += chunk_size - chunk_overlap
 
-    logging.info("created %i chunks from paper with abstract length %i", len(chunks), text_length)
     return chunks

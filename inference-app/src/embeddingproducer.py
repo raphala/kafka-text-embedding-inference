@@ -1,20 +1,21 @@
-import json
 import logging
 import uuid
 
 from confluent_kafka import SerializingProducer
+from confluent_kafka.serialization import SerializationContext, MessageField
 
-from main import OUTPUT_TOPIC, BATCH_SIZE
 from paper import Paper
 
 logging.basicConfig(level=logging.INFO)
 
 
-class Producer:
+class EmbeddingProducer:
 
-    def __init__(self, config):
+    def __init__(self, config, value_serializer, topic):
         self.producer = SerializingProducer(config)
         self.producer.init_transactions()
+        self.value_serializer = value_serializer
+        self.topic = topic
 
     def produce_papers(self, papers: list[Paper], offsets, group_metadata):
         try:
@@ -30,14 +31,15 @@ class Producer:
                     }
                 }
                 self.producer.poll(0)
-                logging.info("producing vector from paper %s to topic %s", paper.title, OUTPUT_TOPIC)
-                self.producer.produce(OUTPUT_TOPIC, json.dumps(qdrant_json).encode('utf-8'))
+                self.producer.produce(topic=self.topic, value=self.value_serializer(qdrant_json,
+                                                                                    SerializationContext(self.topic,
+                                                                                                         MessageField.VALUE)))
 
             self.producer.send_offsets_to_transaction(offsets, group_metadata)
             self.producer.commit_transaction()
-            logging.info("produced %i vectors to topic %s", BATCH_SIZE, OUTPUT_TOPIC)
+            logging.info("produced %i vectors to topic %s", len(papers), self.topic)
         except Exception as e:
-            print(f"Transaction failed: {e}")
+            logging.exception("Transaction failed", e)
             self.producer.abort_transaction()
 
         finally:

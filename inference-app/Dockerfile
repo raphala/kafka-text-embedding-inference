@@ -5,8 +5,7 @@ RUN pip install poetry==1.4.2
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache \
-    PYTHONUNBUFFERED=1
+    POETRY_CACHE_DIR=/tmp/poetry_cache
 
 WORKDIR /inference-app
 
@@ -17,39 +16,9 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --n
 
 FROM python:3.12-slim-bookworm AS runtime
 
-# Install essential packages
-RUN apt-get update && apt-get install -y \
-    wget \
-    curl \
-    gnupg2 \
-    ca-certificates
-
-# Add NVIDIA Container Toolkit repositories
-RUN curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
-    && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
-    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-
-# Update package lists and install NVIDIA Container Toolkit
-RUN apt-get update \
-    && apt-get install -y nvidia-container-toolkit
-
-RUN apt-get install -y software-properties-common
-
-# Download and install CUDA and cuDNN libraries
-RUN wget https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb && \
-    dpkg -i cuda-keyring_1.1-1_all.deb && \
-    add-apt-repository contrib && \
-    apt-get update && apt-get upgrade -y && \
-    apt-get install -y libcudnn9-cuda-12 libcudnn9-dev-cuda-12 cuda-toolkit-12-6
-
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONUNBUFFERED=1
-# CUDNN from nvidia-cudnn-cu12 python package is located in the site-packages directory of python virtual environment.
-ENV LD_LIBRARY_PATH="/usr/local/lib/python3.12/site-packages/nvidia/cudnn/lib:/usr/local/cuda/lib64"
-
 ENV VIRTUAL_ENV=/inference-app/.venv \
-    PATH="/inference-app/.venv/bin:$PATH"
+    PATH="/inference-app/.venv/bin:$PATH" \
+    EXECUTION_PROVIDER="CPUExecutionProvider"
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 

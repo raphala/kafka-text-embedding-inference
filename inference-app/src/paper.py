@@ -10,5 +10,16 @@ class Paper:
         return f"Paper: {self.title}\nDOI: {self.doi}\nAbstract: {self.abstract[:100]}..."
 
 
+def dict_to_paper(paper, ctx):
+    if paper is None:
+        return None
+
+    return Paper(doi=paper['doi'],
+                 title=paper['title'],
+                 abstract=paper['abstract'])
+
+
 def with_chunk(paper, text_chunk) -> Paper:
-    return Paper(doi=paper.doi, title=paper.title, abstract=paper.abstract, text_chunk=text_chunk)
+    chunked_paper = Paper(doi=paper.doi, title=paper.title, abstract=paper.abstract)
+    chunked_paper.text_chunk = text_chunk
+    return chunked_paper
