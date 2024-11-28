@@ -25,9 +25,9 @@ BOOTSTRAP_SERVER = os.environ.get("BOOTSTRAP_SERVER", "localhost:9092")
 INPUT_TOPIC = os.environ.get("INPUT_TOPIC", "paper-embedded")
 OUTPUT_TOPIC = os.environ.get("OUTPUT_TOPIC", "paper")
 EXECUTION_PROVIDER = os.environ.get("EXECUTION_PROVIDER", "CPUExecutionProvider")
-CHUNK_SIZE = 128
+CHUNK_SIZE = 512
 CHUNK_OVERLAP = 32
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
@@ -43,7 +43,6 @@ def load_schema(schema_name: str) -> dict:
 if __name__ == '__main__':
     schema_registry_conf = {'url': SCHEMA_REGISTRY}
     schema_registry_client = SchemaRegistryClient(schema_registry_conf)
-    string_serializer = StringSerializer('utf_8')
     string_deserializer = StringDeserializer('utf_8')
 
     paper_schema = load_schema("paper.json")

@@ -41,6 +41,9 @@
             },
             "title": {
               "type": "string"
+            },
+            "abstract_chunk": {
+              "type": "string"
             }
           },
           "additionalProperties": true
