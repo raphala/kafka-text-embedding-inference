@@ -16,11 +16,10 @@ logging.basicConfig(level=logging.INFO)
 SCHEMA_REGISTRY = os.environ.get("SCHEMA_REGISTRY", "localhost:8081")
 BOOTSTRAP_SERVER = os.environ.get("BOOTSTRAP_SERVER", "localhost:9092")
 OUTPUT_TOPIC = os.environ.get("OUTPUT_TOPIC", "paper")
+PAGES_COUNT = int(os.environ.get("PAGES_COUNT", 50))
 
 PAPER_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=*&resultType=core&pageSize=1000&format=json"
 CURSOR_MARK = "&cursorMark="
-
-PAGES = 20
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
@@ -69,12 +68,12 @@ if __name__ == '__main__':
     producer = SerializingProducer(producer_config)
 
     current_cursor = "*"
-    for i in range(PAGES):
+    for i in range(PAGES_COUNT):
         current_cursor, papers = get_papers(current_cursor)
         producer.poll(0)
         for paper in papers:
             producer.produce(topic=OUTPUT_TOPIC, key=paper.doi, value=paper.to_dict())
 
-        logging.info("Produced 1000 papers to %s - %i/%i", OUTPUT_TOPIC, i, PAGES)
+        logging.info("Produced 1000 papers to %s - %i/%i", OUTPUT_TOPIC, i, PAGES_COUNT)
 
     producer.flush()

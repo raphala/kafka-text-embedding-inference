@@ -22,4 +22,6 @@ spec:
             value: "http://k8kafka-cp-schema-registry.infrastructure.svc.cluster.local:8081"
           - name: OUTPUT_TOPIC
             value: "inference-test-paper"
+          - name: PAGES_COUNT
+            value: "20"
       restartPolicy: Never
