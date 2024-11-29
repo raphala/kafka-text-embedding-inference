@@ -6,7 +6,7 @@ from logger import logger
 
 try:
     logger.info("Loading embedding model %s with execution provider %s", EMBEDDING_MODEL, EXECUTION_PROVIDER)
-    model = TextEmbedding(model_name=EMBEDDING_MODEL, providers=[EXECUTION_PROVIDER])
+    model = TextEmbedding(model_name=EMBEDDING_MODEL, providers=[EXECUTION_PROVIDER, "CPUExecutionProvider"])
     logger.info("Successfully loaded embedding model")
 except Exception as e:
     logger.error("Error loading model", e)
