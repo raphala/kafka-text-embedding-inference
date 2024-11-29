@@ -2,20 +2,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kafka-python-inference-app-cpu
+  name: kafka-python-inference-app
   namespace: personal-raphael-lachtner
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kafka-python-inference-app-cpu
+      app: kafka-python-inference-app
   template:
     metadata:
       labels:
-        app: kafka-python-inference-app-cpu
+        app: kafka-python-inference-app
     spec:
       containers:
-        - name: kafka-python-inference-app-cpu
+        - name: kafka-python-inference-app
           image: us.gcr.io/gcp-bakdata-cluster/kafka-python-inference-app:latest
           imagePullPolicy: Always
           env:
@@ -27,10 +27,10 @@ spec:
               value: "inference-test-paper"
             - name: OUTPUT_TOPIC
               value: "inference-test-embedded-paper"
-            - name: EXECUTION_PROVIDER
+            - name: EXECUTION_PROVIDERS
               value: "CPUExecutionProvider"
             - name: EMBEDDING_MODEL
-              value: "sentence-transformers/all-MiniLM-L6-v2"
+              value: "BAAI/bge-large-en-v1.5"
             - name: CHUNK_SIZE
               value: "512"
             - name: CHUNK_OVERLAP
@@ -45,8 +45,8 @@ spec:
               memory: "2Gi"
               nvidia.com/gpu: "1"
             limits:
-              cpu: "2"
-              memory: "4Gi"
+              cpu: "3"
+              memory: "6Gi"
               nvidia.com/gpu: "1"
       nodeSelector:
         cloud.google.com/gke-accelerator: nvidia-l4
