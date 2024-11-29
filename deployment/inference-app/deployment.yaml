@@ -43,10 +43,6 @@ spec:
             requests:
               cpu: "1"
               memory: "2Gi"
-              nvidia.com/gpu: "1"
             limits:
               cpu: "3"
               memory: "6Gi"
-              nvidia.com/gpu: "1"
-      nodeSelector:
-        cloud.google.com/gke-accelerator: nvidia-l4
