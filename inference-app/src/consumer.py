@@ -1,62 +1,66 @@
-import json
-import logging
-
-from confluent_kafka import Consumer, TopicPartition
+from confluent_kafka import TopicPartition, Consumer
+from confluent_kafka.serialization import SerializationContext, MessageField
 
 import model
-import producer
-from main import CONSUMER_CONFIG, INPUT_TOPIC, BATCH_SIZE
+from chunker import create_chunks
+from config import INPUT_TOPIC, BATCH_SIZE
+from logger import logger
 from paper import Paper
 
-logging.basicConfig(level=logging.INFO)
 
-
-def run_consumer():
-    consumer = Consumer(CONSUMER_CONFIG)
+def run_consumer(config, producer, value_deserializer):
+    consumer = Consumer(config)
     consumer.subscribe([INPUT_TOPIC])
 
     try:
         while True:
+            # TODO has to use poll in order to work with DeserializingConsumer
+            # TODO idea: make custom deserialization consumer
             messages = consumer.consume(num_messages=BATCH_SIZE, timeout=1)
+            logger.info("Consumed %i messages from topic %s", len(messages), INPUT_TOPIC)
             if len(messages) == 0:
                 continue
 
-            papers = extract_papers(messages)
-            inferred_papers = infer_embeddings(papers)
+            papers = extract_papers(messages, value_deserializer)
+            paper_chunks = []
+            for paper in papers:
+                chunks = create_chunks(paper)
+                paper_chunks.extend(chunks)
+
+            inferred_papers = infer_embeddings(paper_chunks)
+
             group_metadata = consumer.consumer_group_metadata()
             producer.produce_papers(inferred_papers, get_offsets(messages), group_metadata)
     except Exception as e:
-        print(f"Consumption failed: {e}")
+        logger.exception(e)
 
     finally:
         consumer.close()
 
 
-def extract_papers(messages) -> list[Paper]:
+def extract_papers(messages, value_deserializer) -> list[Paper]:
     papers = []
     for message in messages:
         if message is None:
             continue
         if message.error():
-            logging.error("Consumer error: %s", messages.error())
+            logger.error("Consumer error: %s", messages.error())
             continue
-        decoded_json = json.loads(message.value().decode('utf-8'))
 
-        doi = decoded_json.get('doi', '')
-        title = decoded_json.get('title', '')
-        abstract = decoded_json.get('abstract', '')
-        paper = Paper(doi, title, abstract)
+        ctx = SerializationContext(message.topic(), MessageField.VALUE, message.headers())
+        paper = value_deserializer(message.value(), ctx)
+
         papers.append(paper)
 
-        logging.info('Received message %s with title %s', doi, title)
     return papers
 
 
 def infer_embeddings(papers: list[Paper]) -> list[Paper]:
     abstract_list = [paper.abstract for paper in papers]
-    vectors = model.get_embedding(abstract_list)
-    for i in range(len(papers)):
-        papers[i].embedding_vector = vectors[i]
+    logger.info("Encoding embedding for %i paper chunks", len(papers))
+    vectors = list(model.get_embedding(abstract_list))
+    for i, vector in enumerate(vectors):
+        papers[i].embedding_vector = vector
     return papers
 
 

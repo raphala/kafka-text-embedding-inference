@@ -36,6 +36,13 @@ class Paper:
         }
         return json.dumps(paper_dict)
 
+    def to_dict(self) -> dict:
+        return {
+            "title": self.title,
+            "abstract": self.abstract,
+            "doi": self.doi
+        }
+
 
 def extract_papers_from_json(json_data) -> tuple[str, list]:
     papers = []

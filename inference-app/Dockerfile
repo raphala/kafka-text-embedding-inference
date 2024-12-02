@@ -1,4 +1,4 @@
-FROM python:3.11-buster AS builder
+FROM python:3.12-bookworm AS builder
 
 RUN pip install poetry==1.4.2
 
@@ -14,13 +14,16 @@ RUN touch README.md
 
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --no-root
 
-FROM python:3.11-slim-buster AS runtime
+FROM python:3.12-slim-bookworm AS runtime
 
 ENV VIRTUAL_ENV=/inference-app/.venv \
     PATH="/inference-app/.venv/bin:$PATH"
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-COPY inference-app ./inference-app
+COPY src ./src
+COPY schemas/ ./schemas/
 
-ENTRYPOINT ["python", "inference-app/src/main.py"]
+RUN pip install fastembed
+
+ENTRYPOINT ["python", "src/main.py"]

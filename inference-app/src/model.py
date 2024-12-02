@@ -1,15 +1,17 @@
-import logging
+import numpy as np
+from fastembed import TextEmbedding
 
-from sentence_transformers import SentenceTransformer
-from torch import Tensor
+from config import EXECUTION_PROVIDERS, EMBEDDING_MODEL
+from logger import logger
 
-from main import BATCH_SIZE
+try:
+    logger.info("Loading embedding model %s with execution provider %s", EMBEDDING_MODEL, EXECUTION_PROVIDERS)
+    model = TextEmbedding(model_name=EMBEDDING_MODEL, providers=EXECUTION_PROVIDERS)
+    logger.info("Successfully loaded embedding model")
+except Exception as e:
+    logger.error("Error loading model", e)
 
-logging.basicConfig(level=logging.INFO)
 
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2', backend="onnx")
-
-
-def get_embedding(input_text: str) -> Tensor:
-    logging.info("encoding embedding for %s", input_text)
-    return model.encode(input_text, batch_size=BATCH_SIZE)
+def get_embedding(input_text: list[str]) -> list[np.ndarray]:
+    logger.info("Encoding %i embeddings", len(input_text))
+    return model.embed(input_text)

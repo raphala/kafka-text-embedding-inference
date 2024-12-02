@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: paper-producer
-  namespace: kafka
+  namespace: ${K8S_NAMESPACE}
 spec:
   backoffLimit: 0
   template:
@@ -12,7 +12,16 @@ spec:
         app: paper-producer
     spec:
       containers:
-      - name: paper-producer
-        image: paper-producer:latest
-        imagePullPolicy: Never
+        - name: paper-producer
+          image: ${DOCKER_IMAGE_URL}kafka-python-inference-producer:latest
+          imagePullPolicy: Always
+          env:
+            - name: BOOTSTRAP_SERVER
+              value: "${BOOTSTRAP_SERVER}"
+            - name: SCHEMA_REGISTRY
+              value: "${SCHEMA_REGISTRY}"
+            - name: OUTPUT_TOPIC
+              value: "inference-test-paper"
+            - name: PAGES_COUNT
+              value: "20"
       restartPolicy: Never
