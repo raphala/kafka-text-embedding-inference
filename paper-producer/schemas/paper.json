@@ -16,6 +16,10 @@
       "description": "Digital Object Identifier of the paper"
     }
   },
-  "required": ["title", "abstract", "doi"],
+  "required": [
+    "title",
+    "abstract",
+    "doi"
+  ],
   "additionalProperties": false
 }

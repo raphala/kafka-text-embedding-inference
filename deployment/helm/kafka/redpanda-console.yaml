@@ -1,8 +1,8 @@
 console:
   config:
     kafka:
-      brokers: 
-        -  my-cluster-kafka-bootstrap:9092
+      brokers:
+        - my-cluster-kafka-bootstrap:9092
     connect:
       enabled: true
       clusters:
