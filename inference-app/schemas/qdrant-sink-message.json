@@ -1,63 +1,96 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "ValueExtractorPayload",
-  "type": "object",
-  "properties": {
-    "collection_name": {
-      "type": "string",
-      "description": "Name of the collection."
-    },
-    "id": {
-      "description": "Unique identifier, either a UUID string or a positive integer.",
-      "oneOf": [
-        {
-          "type": "string",
-          "format": "uuid",
-          "description": "UUID string as the identifier."
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Embedded Paper",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "collection_name": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "title": "Not included"
+                },
+                {
+                    "type": "string"
+                }
+            ]
         },
-        {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Positive integer as the identifier."
+        "id": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "title": "Not included"
+                },
+                {
+                    "type": "string"
+                }
+            ]
+        },
+        "vector": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "title": "Not included"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                }
+            ]
+        },
+        "payload": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "title": "Not included"
+                },
+                {
+                    "$ref": "#/definitions/Payload"
+                }
+            ]
         }
-      ]
     },
-    "vector": {
-      "type": "array",
-      "description": "Vector data associated with the point.",
-      "items": {
-        "type": "number"
-      }
-    },
-    "payload": {
-      "description": "Additional payload data.",
-      "anyOf": [
-        {
-          "type": "object",
-          "description": "Payload as an object.",
-          "properties": {
-            "doi": {
-              "type": "string"
-            },
-            "title": {
-              "type": "string"
-            },
-            "abstract_chunk": {
-              "type": "string"
+    "definitions": {
+        "Payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "doi": {
+                    "oneOf": [
+                        {
+                            "type": "null",
+                            "title": "Not included"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "title": {
+                    "oneOf": [
+                        {
+                            "type": "null",
+                            "title": "Not included"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "abstract_chunk": {
+                    "oneOf": [
+                        {
+                            "type": "null",
+                            "title": "Not included"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                }
             }
-          },
-          "additionalProperties": true
-        },
-        {
-          "type": "null",
-          "description": "Payload can be null."
         }
-      ]
     }
-  },
-  "required": [
-    "collection_name",
-    "id"
-  ],
-  "additionalProperties": false
 }
