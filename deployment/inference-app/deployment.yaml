@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kafka-python-inference-app-fastembed-cpu
+  name: kafka-python-inference-app-tei
   namespace: ${K8S_NAMESPACE}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kafka-python-inference-app-fastembed-cpu
+      app: kafka-python-inference-app-tei
   template:
     metadata:
       labels:
-        app: kafka-python-inference-app-fastembed-cpu
+        app: kafka-python-inference-app-tei
     spec:
       containers:
-        - name: kafka-python-inference-app-fastembed-cpu
-          image: ${DOCKER_IMAGE_URL}kafka-python-inference-app:latest-fastembed-cpu
+        - name: kafka-python-inference-app-tei
+          image: ${DOCKER_IMAGE_URL}kafka-python-inference-app:latest-tei
           imagePullPolicy: Always
           env:
             - name: BOOTSTRAP_SERVER
@@ -27,10 +27,6 @@ spec:
               value: "inference-test-paper"
             - name: OUTPUT_TOPIC
               value: "inference-test-embedded-paper"
-            - name: EXECUTION_PROVIDERS
-              value: "CPUExecutionProvider"
-            - name: EMBEDDING_MODEL
-              value: "BAAI/bge-large-en-v1.5"
             - name: CHUNK_SIZE
               value: "512"
             - name: CHUNK_OVERLAP
@@ -39,6 +35,8 @@ spec:
               value: "32"
             - name: LOG_LEVEL
               value: "INFO"
+            - name: TEI_SERVER
+              value: "${TEI_SERVER}"
           resources:
             requests:
               cpu: "1"

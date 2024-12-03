@@ -1,16 +1,17 @@
 from confluent_kafka import TopicPartition, Consumer
 from confluent_kafka.serialization import SerializationContext, MessageField
 
-import model
 from chunker import create_chunks
-from config import INPUT_TOPIC, BATCH_SIZE
+from config import INPUT_TOPIC, BATCH_SIZE, TEI_SERVER
 from logger import logger
 from paper import Paper
+from embeddingsinference import TextEmbeddingsClient
 
 
 def run_consumer(config, producer, value_deserializer):
     consumer = Consumer(config)
     consumer.subscribe([INPUT_TOPIC])
+    embeddings_inference = TextEmbeddingsClient(TEI_SERVER)
 
     try:
         while True:
@@ -27,7 +28,7 @@ def run_consumer(config, producer, value_deserializer):
                 chunks = create_chunks(paper)
                 paper_chunks.extend(chunks)
 
-            inferred_papers = infer_embeddings(paper_chunks)
+            inferred_papers = infer_embeddings(paper_chunks, embeddings_inference)
 
             group_metadata = consumer.consumer_group_metadata()
             producer.produce_papers(inferred_papers, get_offsets(messages), group_metadata)
@@ -55,10 +56,11 @@ def extract_papers(messages, value_deserializer) -> list[Paper]:
     return papers
 
 
-def infer_embeddings(papers: list[Paper]) -> list[Paper]:
-    abstract_list = [paper.abstract for paper in papers]
+def infer_embeddings(papers: list[Paper], embeddings_inference: TextEmbeddingsClient) -> list[Paper]:
+    abstract_list = [paper.text_chunk for paper in papers]
     logger.info("Encoding embedding for %i paper chunks", len(papers))
-    vectors = list(model.get_embedding(abstract_list))
+    # TODO are they in the same order? coming from Embedstream?
+    vectors = embeddings_inference.embed_batch(texts=abstract_list)
     for i, vector in enumerate(vectors):
         papers[i].embedding_vector = vector
     return papers

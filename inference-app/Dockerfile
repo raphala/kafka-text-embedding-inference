@@ -24,6 +24,4 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 COPY src ./src
 COPY schemas/ ./schemas/
 
-RUN pip install fastembed
-
 ENTRYPOINT ["python", "src/main.py"]
