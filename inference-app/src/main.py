@@ -31,7 +31,7 @@ def load_schema(schema_name: str) -> dict:
 
 
 if __name__ == '__main__':
-    logger.info("Starting inference app with provider %s, chunk size %i, chunk overlap %i, batch size %i",  CHUNK_SIZE, CHUNK_OVERLAP, BATCH_SIZE)
+    logger.info("Starting inference app with TEI, chunk size %i, chunk overlap %i, batch size %i",  CHUNK_SIZE, CHUNK_OVERLAP, BATCH_SIZE)
     schema_registry_conf = {'url': SCHEMA_REGISTRY}
     schema_registry_client = SchemaRegistryClient(schema_registry_conf)
     string_deserializer = StringDeserializer('utf_8')
