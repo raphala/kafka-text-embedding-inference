@@ -12,6 +12,7 @@ except Exception as e:
     logger.error("Error loading model", e)
 
 
-def get_embedding(input_text: list[str]) -> list[np.ndarray]:
+def get_embedding(input_text: list[str]) -> list[float]:
     logger.info("Encoding %i embeddings", len(input_text))
-    return model.embed(input_text)
+    embeddings = model.embed(input_text)
+    return np.concatenate(embeddings).astype(float).tolist()
