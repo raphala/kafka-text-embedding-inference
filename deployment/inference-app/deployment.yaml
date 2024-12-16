@@ -28,13 +28,13 @@ spec:
             - name: OUTPUT_TOPIC
               value: "inference-test-embedded-paper"
             - name: CHUNK_SIZE
-              value: "1500"
+              value: "1000"
             - name: CHUNK_OVERLAP
               value: "100"
             - name: BATCH_SIZE
               value: "1"
             - name: LOG_LEVEL
-              value: "INFO"
+              value: "WARN"
             - name: TEI_SERVER
               value: "${TEI_SERVER}"
           resources:
@@ -42,5 +42,5 @@ spec:
               cpu: "1"
               memory: "2Gi"
             limits:
-              cpu: "3"
+              cpu: "4"
               memory: "8Gi"

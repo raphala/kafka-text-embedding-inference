@@ -1,21 +1,18 @@
-import asyncio
+from time import perf_counter
 
-from confluent_kafka import TopicPartition, Consumer
+from confluent_kafka import Consumer
 from confluent_kafka.serialization import SerializationContext, MessageField
 
+from asyncembeddingsinference import AsyncTextEmbeddingsClient
 from chunker import create_chunks
 from config import INPUT_TOPIC, BATCH_SIZE, TEI_SERVER
 from logger import logger
 from paper import Paper
-from time import perf_counter
-from asyncembeddingsinference import AsyncTextEmbeddingsClient
-# from embeddingsinference import TextEmbeddingsClient
 
 
 def run_consumer(config, producer, value_deserializer):
     consumer = Consumer(config)
     consumer.subscribe([INPUT_TOPIC])
-    # embeddings_inference = TextEmbeddingsClient(TEI_SERVER)
     embeddings_inference = AsyncTextEmbeddingsClient(TEI_SERVER, producer)
 
     try:
@@ -25,7 +22,8 @@ def run_consumer(config, producer, value_deserializer):
             consumer_start_time = perf_counter()
             messages = consumer.consume(num_messages=BATCH_SIZE, timeout=1)
             consumer_end_time = perf_counter()
-            logger.info("Consumed %i messages from topic %s took %f seconds", len(messages), INPUT_TOPIC, consumer_end_time - consumer_start_time)
+            logger.info("Consumed %i messages from topic %s took %f seconds", len(messages), INPUT_TOPIC,
+                        consumer_end_time - consumer_start_time)
             if len(messages) == 0:
                 continue
 
@@ -39,23 +37,11 @@ def run_consumer(config, producer, value_deserializer):
             chunking_end_time = perf_counter()
             logger.info("Extracting and chunking papers took %f seconds", chunking_end_time - chunking_start_time)
 
+            embedding_start_time = perf_counter()
             for paper_chunk in paper_chunks:
                 embeddings_inference.get_embedding(paper_chunk)
-                # embeddings_inference.embed(paper_chunk.text_chunk)
-                # embeddings_inference.process_paper(paper_chunk)
-                # producer.produce_papers(paper_chunk)
-
-            # inference_start_time = perf_counter()
-            # inferred_papers = infer_embeddings(paper_chunks, embeddings_inference)
-            # inference_end_time = perf_counter()
-            # logger.info("Inferring chunks took %f seconds", inference_end_time - inference_start_time)
-            #
-            # group_metadata = consumer.consumer_group_metadata()
-            # producer_start_time = perf_counter()
-            # # futures = [producer.queue_papers(inferred) for inferred in inferred_papers]
-            # producer.produce_papers(inferred_papers, get_offsets(messages), group_metadata)
-            # producer_end_time = perf_counter()
-            # logger.info("Producing chunks took %f seconds", producer_end_time - producer_start_time)
+            embedding_end_time = perf_counter()
+            logger.info("Embedding and producing papers took %f seconds", embedding_end_time - embedding_start_time)
     except Exception as e:
         logger.exception(e)
 
@@ -78,7 +64,6 @@ def extract_papers(messages, value_deserializer) -> list[Paper]:
         papers.append(paper)
 
     return papers
-
 
 # def infer_embeddings(papers: list[Paper], embeddings_inference: TextEmbeddingsClient) -> list[Paper]:
 #     abstract_list = [paper.text_chunk for paper in papers]

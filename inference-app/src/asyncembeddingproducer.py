@@ -1,7 +1,5 @@
 import asyncio
-import json
 import uuid
-import numpy as np
 from asyncio import Queue
 from queue import Empty
 from threading import Thread
@@ -11,15 +9,6 @@ from confluent_kafka.serialization import SerializationContext, MessageField, St
 
 from logger import logger
 from paper import Paper
-
-
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return [self.default(x) for x in obj]
-        elif isinstance(obj, np.float32):
-            return format(float(obj), '.7f')  # Format to 7 decimal places
-        return json.JSONEncoder.default(self, obj)
 
 
 class AsyncEmbeddingProducer:
@@ -61,8 +50,9 @@ class AsyncEmbeddingProducer:
                                                      SerializationContext(self.topic, MessageField.VALUE))
                 serialized_value = self.value_serializer(qdrant_json,
                                                          SerializationContext(self.topic, MessageField.VALUE))
-                self.producer.produce(topic=self.topic, key=serialized_key, value=serialized_value)
                 self.producer.poll(0)
+                self.producer.produce(topic=self.topic, key=serialized_key, value=serialized_value)
+                self.producer.flush()
 
             except Empty:
                 continue
@@ -70,10 +60,7 @@ class AsyncEmbeddingProducer:
                 logger.exception("Producer thread error", e)
 
     def produce_papers(self, paper: Paper):
-        # logger.info("Producing paper")
         asyncio.run_coroutine_threadsafe(self.queue.put(paper), self.loop)
-    #     TODO: test loop.call_soon_threadsafe(
-    #         tasks.completed.put_nowait, result)
 
     def shutdown(self):
         self.running = False

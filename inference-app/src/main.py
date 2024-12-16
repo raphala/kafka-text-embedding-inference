@@ -6,9 +6,9 @@ from confluent_kafka.schema_registry.json_schema import JSONSerializer, JSONDese
 from confluent_kafka.serialization import StringDeserializer
 
 import consumer
-from config import SCHEMA_REGISTRY, BOOTSTRAP_SERVER, OUTPUT_TOPIC, BATCH_SIZE, CHUNK_SIZE, CHUNK_OVERLAP
 # from embeddingproducer import EmbeddingProducer
 from asyncembeddingproducer import AsyncEmbeddingProducer
+from config import SCHEMA_REGISTRY, BOOTSTRAP_SERVER, OUTPUT_TOPIC, BATCH_SIZE, CHUNK_SIZE, CHUNK_OVERLAP
 from logger import logger
 from paper import dict_to_paper
 
@@ -32,7 +32,8 @@ def load_schema(schema_name: str) -> dict:
 
 
 if __name__ == '__main__':
-    logger.info("Starting inference app with TEI, chunk size %i, chunk overlap %i, batch size %i",  CHUNK_SIZE, CHUNK_OVERLAP, BATCH_SIZE)
+    logger.info("Starting inference app with TEI, chunk size %i, chunk overlap %i, batch size %i", CHUNK_SIZE,
+                CHUNK_OVERLAP, BATCH_SIZE)
     schema_registry_conf = {'url': SCHEMA_REGISTRY}
     schema_registry_client = SchemaRegistryClient(schema_registry_conf)
     string_deserializer = StringDeserializer('utf_8')
@@ -54,7 +55,6 @@ if __name__ == '__main__':
 
     producer_config = {
         'bootstrap.servers': BOOTSTRAP_SERVER,
-        # 'transactional.id': 'embeddings-producer-1',
         'linger.ms': '500ms'
     }
 
