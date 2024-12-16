@@ -49,12 +49,17 @@ if __name__ == '__main__':
     consumer_config = {
         'bootstrap.servers': BOOTSTRAP_SERVER,
         'group.id': 'embeddings',
-        'auto.offset.reset': 'earliest'
+        'auto.offset.reset': 'earliest',
+        'compression.type': 'gzip'
     }
 
     producer_config = {
         'bootstrap.servers': BOOTSTRAP_SERVER,
-        'linger.ms': '500ms'
+        'linger.ms': '1200ms',
+        'batch.num.messages': '20000',
+        'compression.type': 'gzip',
+        'queue.buffering.max.kbytes': '10485760',
+        'queue.buffering.max.messages': '1000000'
     }
 
     producer = AsyncEmbeddingProducer(producer_config, qdrant_json_serializer, OUTPUT_TOPIC)

@@ -36,12 +36,13 @@ class AsyncEmbeddingProducer:
     async def _produce_from_queue(self):
         while self.running:
             try:
-                record = await self.queue.get()
-                if record is None:
+                paper = await self.queue.get()
+                if paper is None:
                     break
 
+                record = self.serialize_paper(paper)
+
                 self.producer.produce(topic=self.topic, key=record.key, value=record.value)
-                self.producer.poll(0)
 
             except Empty:
                 continue
@@ -49,8 +50,7 @@ class AsyncEmbeddingProducer:
                 logger.exception("Producer thread error", e)
 
     def produce_papers(self, paper: Paper):
-        record = self.serialize_paper(paper)
-        asyncio.run_coroutine_threadsafe(self.queue.put(record), self.loop)
+        asyncio.run_coroutine_threadsafe(self.queue.put(paper), self.loop)
 
     def serialize_paper(self, paper: Paper) -> Record:
         embedding_id = str(uuid.uuid4())

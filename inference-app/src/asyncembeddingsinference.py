@@ -29,7 +29,7 @@ class AsyncTextEmbeddingsClient:
                 self.semaphore.release()
 
         self.semaphore.acquire()
-        future = self.stub.Embed.future(tei_pb2.EmbedRequest(inputs=paper.text_chunk))
+        future = self.stub.Embed.future(tei_pb2.EmbedRequest(inputs=paper.text_chunk, truncate=True))
         future.add_done_callback(produce_embeddings)
 
     def close(self):
