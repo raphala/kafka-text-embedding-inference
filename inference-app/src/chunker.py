@@ -2,7 +2,6 @@ from config import CHUNK_OVERLAP, CHUNK_SIZE
 from paper import with_chunk, Paper
 
 
-# TODO use tokens instead of char len!
 def create_chunks(paper) -> list[Paper]:
     input_text = paper.abstract
     chunks = []

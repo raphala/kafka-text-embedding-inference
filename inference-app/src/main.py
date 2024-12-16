@@ -7,7 +7,8 @@ from confluent_kafka.serialization import StringDeserializer
 
 import consumer
 from config import SCHEMA_REGISTRY, BOOTSTRAP_SERVER, OUTPUT_TOPIC, BATCH_SIZE, CHUNK_SIZE, CHUNK_OVERLAP
-from embeddingproducer import EmbeddingProducer
+# from embeddingproducer import EmbeddingProducer
+from asyncembeddingproducer import AsyncEmbeddingProducer
 from logger import logger
 from paper import dict_to_paper
 
@@ -48,15 +49,14 @@ if __name__ == '__main__':
     consumer_config = {
         'bootstrap.servers': BOOTSTRAP_SERVER,
         'group.id': 'embeddings',
-        'auto.offset.reset': 'earliest',
-        'isolation.level': 'read_committed',
-        'enable.auto.commit': False
+        'auto.offset.reset': 'earliest'
     }
 
     producer_config = {
         'bootstrap.servers': BOOTSTRAP_SERVER,
-        'transactional.id': 'embeddings-producer-1',
+        # 'transactional.id': 'embeddings-producer-1',
+        'linger.ms': '500ms'
     }
 
-    producer = EmbeddingProducer(producer_config, qdrant_json_serializer, OUTPUT_TOPIC)
+    producer = AsyncEmbeddingProducer(producer_config, qdrant_json_serializer, OUTPUT_TOPIC)
     consumer.run_consumer(consumer_config, producer, paper_json_deserializer)

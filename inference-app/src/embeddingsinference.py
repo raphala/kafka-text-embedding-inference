@@ -1,4 +1,4 @@
-import grpc
+import grpc.aio
 from typing import List
 import numpy as np
 
@@ -13,25 +13,28 @@ class TextEmbeddingsClient:
         self.embed_stub = tei_pb2_grpc.EmbedStub(self.channel)
         self.info_stub = tei_pb2_grpc.InfoStub(self.channel)
 
-    def embed(self, text: str) -> np.ndarray:
+    async def embed(self, text: str) -> np.ndarray:
         request = tei_pb2.EmbedRequest(inputs=text)
 
-        response = self.embed_stub.Embed(request)
-        return np.array(response.embeddings)
+        response = await self.embed_stub.Embed(request)
+        return np.array(response.embeddings, dtype=np.float32)
 
-    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
-
-        def generate_requests():
-            for text in texts:
-                yield tei_pb2.EmbedRequest(inputs=text)
-
-        embeddings = []
-        responses = self.embed_stub.EmbedStream(generate_requests())
-
-        for response in responses:
-            embeddings.append(np.array(response.embeddings))
-
-        return embeddings
+    # def embed_batch(self, texts: List[str]) -> List[float]:
+    #
+    #     def generate_requests():
+    #         for text in texts:
+    #             yield tei_pb2.EmbedRequest(inputs=text)
+    #
+    #     embeddings = []
+    #     responses = self.embed_stub.EmbedStream(generate_requests())
+    #
+    #     for response in responses:
+    #         raw_embeddings = np.array(response.embeddings)
+    #         quantized_embeddings = raw_embeddings.astype(np.float16)
+    #         # quantized_embeddings = quantizer.quantize(raw_embeddings)
+    #         embeddings.append(raw_embeddings)
+    #
+    #     return embeddings
 
     def close(self):
         self.channel.close()
