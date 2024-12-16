@@ -17,7 +17,7 @@ class AsyncTextEmbeddingsClient:
         self.producer = producer
         self.semaphore = threading.Semaphore(MAX_CONCURRENT_REQUESTS)
 
-    def get_embedding(self, paper):
+    def produce_embedding(self, paper):
         def produce_embeddings(_future):
             try:
                 result = _future.result()

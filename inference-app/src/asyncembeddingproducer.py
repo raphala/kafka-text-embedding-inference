@@ -11,6 +11,11 @@ from logger import logger
 from paper import Paper
 
 
+class Record:
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
 class AsyncEmbeddingProducer:
     def __init__(self, config, value_serializer, topic):
         self.producer = SerializingProducer(config)
@@ -31,28 +36,12 @@ class AsyncEmbeddingProducer:
     async def _produce_from_queue(self):
         while self.running:
             try:
-                paper = await self.queue.get()
-                if paper is None:
+                record = await self.queue.get()
+                if record is None:
                     break
 
-                embedding_id = str(uuid.uuid4())
-                qdrant_json = {
-                    "collection_name": "embedding",
-                    "id": embedding_id,
-                    "vector": paper.embedding_vector,
-                    "payload": {
-                        "doi": paper.doi,
-                        "title": paper.title,
-                        "abstract_chunk": paper.text_chunk
-                    }
-                }
-                serialized_key = self.key_serializer(embedding_id,
-                                                     SerializationContext(self.topic, MessageField.VALUE))
-                serialized_value = self.value_serializer(qdrant_json,
-                                                         SerializationContext(self.topic, MessageField.VALUE))
+                self.producer.produce(topic=self.topic, key=record.key, value=record.value)
                 self.producer.poll(0)
-                self.producer.produce(topic=self.topic, key=serialized_key, value=serialized_value)
-                self.producer.flush()
 
             except Empty:
                 continue
@@ -60,7 +49,26 @@ class AsyncEmbeddingProducer:
                 logger.exception("Producer thread error", e)
 
     def produce_papers(self, paper: Paper):
-        asyncio.run_coroutine_threadsafe(self.queue.put(paper), self.loop)
+        record = self.serialize_paper(paper)
+        asyncio.run_coroutine_threadsafe(self.queue.put(record), self.loop)
+
+    def serialize_paper(self, paper: Paper) -> Record:
+        embedding_id = str(uuid.uuid4())
+        qdrant_json = {
+            "collection_name": "embedding",
+            "id": embedding_id,
+            "vector": paper.embedding_vector,
+            "payload": {
+                "doi": paper.doi,
+                "title": paper.title,
+                "abstract_chunk": paper.text_chunk
+            }
+        }
+        serialized_key = self.key_serializer(embedding_id,
+                                             SerializationContext(self.topic, MessageField.VALUE))
+        serialized_value = self.value_serializer(qdrant_json,
+                                                 SerializationContext(self.topic, MessageField.VALUE))
+        return Record(serialized_key, serialized_value)
 
     def shutdown(self):
         self.running = False

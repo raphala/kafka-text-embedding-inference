@@ -30,7 +30,7 @@ spec:
             - name: CHUNK_SIZE
               value: "1000"
             - name: CHUNK_OVERLAP
-              value: "100"
+              value: "50"
             - name: BATCH_SIZE
               value: "1"
             - name: LOG_LEVEL

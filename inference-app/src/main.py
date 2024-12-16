@@ -6,7 +6,6 @@ from confluent_kafka.schema_registry.json_schema import JSONSerializer, JSONDese
 from confluent_kafka.serialization import StringDeserializer
 
 import consumer
-# from embeddingproducer import EmbeddingProducer
 from asyncembeddingproducer import AsyncEmbeddingProducer
 from config import SCHEMA_REGISTRY, BOOTSTRAP_SERVER, OUTPUT_TOPIC, BATCH_SIZE, CHUNK_SIZE, CHUNK_OVERLAP
 from logger import logger

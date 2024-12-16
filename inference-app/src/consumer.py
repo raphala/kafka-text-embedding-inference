@@ -39,7 +39,7 @@ def run_consumer(config, producer, value_deserializer):
 
             embedding_start_time = perf_counter()
             for paper_chunk in paper_chunks:
-                embeddings_inference.get_embedding(paper_chunk)
+                embeddings_inference.produce_embedding(paper_chunk)
             embedding_end_time = perf_counter()
             logger.info("Embedding and producing papers took %f seconds", embedding_end_time - embedding_start_time)
     except Exception as e:
@@ -64,20 +64,3 @@ def extract_papers(messages, value_deserializer) -> list[Paper]:
         papers.append(paper)
 
     return papers
-
-# def infer_embeddings(papers: list[Paper], embeddings_inference: TextEmbeddingsClient) -> list[Paper]:
-#     abstract_list = [paper.text_chunk for paper in papers]
-#     logger.info("Encoding embedding for %i paper chunks", len(papers))
-#     # TODO are they in the same order? coming from Embedstream?
-#     vectors = embeddings_inference.embed_batch(texts=abstract_list)
-#     for i, vector in enumerate(vectors):
-#         papers[i].embedding_vector = vector
-#     return papers
-
-
-# def get_offsets(messages):
-#     offsets = []
-#     for message in messages:
-#         tp = TopicPartition(message.topic(), message.partition(), message.offset() + 1)
-#         offsets.append(tp)
-#     return offsets
