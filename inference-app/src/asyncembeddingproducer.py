@@ -1,4 +1,6 @@
 import asyncio
+import threading
+import time
 import uuid
 from asyncio import Queue
 from queue import Empty
@@ -17,13 +19,18 @@ class Record:
         self.value = value
 
 class AsyncEmbeddingProducer:
-    def __init__(self, config, value_serializer, topic):
+    def __init__(self, config, value_serializer, topic, batch_size=1000, flush_interval=32):
         self.producer = SerializingProducer(config)
         self.key_serializer = StringSerializer('utf_8')
         self.value_serializer = value_serializer
         self.topic = topic
-        self.queue = Queue()
+        self.queue = asyncio.Queue()
         self.running = True
+
+        self.batch_size = batch_size
+        self.flush_interval = flush_interval
+        self.messages_since_last_flush = 0
+        self.last_flush_time = time.time()
 
         self.loop = asyncio.new_event_loop()
         self.producer_thread = Thread(target=self._run_event_loop, daemon=True)
@@ -31,7 +38,12 @@ class AsyncEmbeddingProducer:
 
     def _run_event_loop(self):
         asyncio.set_event_loop(self.loop)
-        self.loop.run_until_complete(self._produce_from_queue())
+        try:
+            self.loop.run_until_complete(self._produce_from_queue())
+        except Exception as e:
+            logger.exception("Event loop error", exc_info=e)
+        finally:
+            self.loop.close()
 
     async def _produce_from_queue(self):
         while self.running:
@@ -41,13 +53,34 @@ class AsyncEmbeddingProducer:
                     break
 
                 record = self.serialize_paper(paper)
+                self.producer.produce(
+                    topic=self.topic,
+                    key=record.key,
+                    value=record.value,
+                    on_delivery=self.delivery_report
+                )
+                self.messages_since_last_flush += 1
 
-                self.producer.produce(topic=self.topic, key=record.key, value=record.value)
+                current_time = time.time()
+                time_since_last_flush = current_time - self.last_flush_time
 
-            except Empty:
-                continue
+                self.producer.poll(0)
+
+                if (self.messages_since_last_flush >= self.batch_size or
+                        time_since_last_flush >= self.flush_interval):
+                    self.producer.flush(0)
+                    self.messages_since_last_flush = 0
+                    self.last_flush_time = current_time
+
             except Exception as e:
-                logger.exception("Producer thread error", e)
+                logger.exception("Producer thread error", exc_info=e)
+
+        # Flush any remaining messages before exiting
+        self.producer.flush()
+
+    def delivery_report(self, err, msg):
+        if err is not None:
+            logger.error(f"Delivery failed for record {msg.key()}: {err}")
 
     def produce_papers(self, paper: Paper):
         asyncio.run_coroutine_threadsafe(self.queue.put(paper), self.loop)

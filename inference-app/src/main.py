@@ -49,15 +49,13 @@ if __name__ == '__main__':
     consumer_config = {
         'bootstrap.servers': BOOTSTRAP_SERVER,
         'group.id': 'embeddings',
-        'auto.offset.reset': 'earliest',
-        'compression.type': 'gzip'
+        'auto.offset.reset': 'earliest'
     }
 
     producer_config = {
         'bootstrap.servers': BOOTSTRAP_SERVER,
         'linger.ms': '1200ms',
         'batch.num.messages': '20000',
-        'compression.type': 'gzip',
         'queue.buffering.max.kbytes': '10485760',
         'queue.buffering.max.messages': '1000000'
     }
