@@ -1,37 +1,33 @@
-package com.bakdata.inference;
+package at.raphaell.inference;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Chunker {
-
-//    TODO make abstract chunker with one naive and one actual token based chunking
+public class NaiveCharacterChunker implements Chunker {
 
     private final int chunkSize;
     private final int chunkOverlap;
 
-    public Chunker(final int chunkSize, final int chunkOverlap) {
+    public NaiveCharacterChunker(final int chunkSize, final int chunkOverlap) {
         this.chunkSize = chunkSize;
         this.chunkOverlap = chunkOverlap;
     }
 
-    public List<ChunkWithPaper> createChunks(final Paper paper) {
-        final String inputText = paper.abstract_();
-        final List<ChunkWithPaper> chunks = new ArrayList<>();
+    @Override
+    public List<ChunkedChunkable> chunkText(final Chunkable chunkable) {
+        final String inputText = chunkable.getText();
+        final List<ChunkedChunkable> chunks = new ArrayList<>();
         final int textLength = inputText.length();
 
         int start = 0;
         while (start < textLength) {
             final int end = Math.min(start + this.chunkSize, textLength);
             final String chunk = inputText.substring(start, end);
-            chunks.add(new ChunkWithPaper(chunk, paper));
+            chunks.add(new ChunkedChunkable(chunkable, chunk));
 
             start += (this.chunkSize - this.chunkOverlap);
         }
 
         return chunks;
     }
-
-    public record ChunkWithPaper(String chunk, Paper paper) {}
 }
-

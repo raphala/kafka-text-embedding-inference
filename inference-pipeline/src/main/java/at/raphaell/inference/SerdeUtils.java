@@ -1,4 +1,4 @@
-package com.bakdata.inference;
+package at.raphaell.inference;
 
 import io.confluent.kafka.streams.serdes.json.KafkaJsonSchemaSerde;
 import java.util.Map;
