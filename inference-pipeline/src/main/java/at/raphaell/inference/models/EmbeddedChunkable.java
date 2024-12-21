@@ -1,4 +1,4 @@
-package at.raphaell.inference;
+package at.raphaell.inference.models;
 
 import java.util.List;
 

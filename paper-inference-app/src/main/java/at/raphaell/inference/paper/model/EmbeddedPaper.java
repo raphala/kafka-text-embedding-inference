@@ -1,9 +1,10 @@
 package at.raphaell.inference.paper.model;
 
-import at.raphaell.inference.ChunkedChunkable;
+import at.raphaell.inference.models.EmbeddedChunkable;
 import at.raphaell.inference.paper.PaperInferenceApp;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+import java.util.UUID;
 
 public record EmbeddedPaper(
         @JsonProperty("collection_name") String collectionName,
@@ -12,11 +13,12 @@ public record EmbeddedPaper(
         @JsonProperty("payload") Payload payload
 ) {
 
-    public static EmbeddedPaper fromPaper(final ChunkedChunkable chunkedChunkable, final List<Float> vector,
-            final String id) {
-        final Paper paper = (Paper) chunkedChunkable.chunkable();
-        final Payload paperPayload = new Payload(paper.doi(), paper.title(), chunkedChunkable.textChunk());
-        return new EmbeddedPaper(PaperInferenceApp.COLLECTION_NAME, id, vector, paperPayload);
+    public static EmbeddedPaper fromEmbeddedChunkable(final EmbeddedChunkable embeddedChunkable) {
+        final Paper paper = (Paper) embeddedChunkable.chunkedChunkable().chunkable();
+        final Payload paperPayload =
+                new Payload(paper.doi(), paper.title(), embeddedChunkable.chunkedChunkable().textChunk());
+        return new EmbeddedPaper(PaperInferenceApp.COLLECTION_NAME, UUID.randomUUID(), embeddedChunkable.vector(),
+                paperPayload);
     }
 
     private record Payload(

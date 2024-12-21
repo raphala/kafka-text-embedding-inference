@@ -13,6 +13,7 @@ import org.apache.kafka.common.serialization.Deserializer;
 
 public class InferenceConsumer<K, V> {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(InferenceConsumer.class);
     private static final Duration POLL_DURATION = Duration.ofMillis(100);
     private final KafkaConsumer<K, V> consumer;
     private final Map<TopicPartition, OffsetAndMetadata> offsets;
@@ -25,7 +26,8 @@ public class InferenceConsumer<K, V> {
         this.offsets = new ConcurrentHashMap<>();
 //        consumerProperties.setProperty("json.value.type", Paper.class.getName());
         this.consumer = new KafkaConsumer<>(consumerProperties, keyDeserializer, valueDeserializer);
-        this.consumer.subscribe(List.of(InferenceConfig.INPUT_TOPIC));
+        log.info("Subscribing customer to topic {}", InferenceVar.INPUT_TOPIC);
+        this.consumer.subscribe(List.of(InferenceVar.INPUT_TOPIC));
     }
 
     public ConsumerRecords<K, V> poll() {

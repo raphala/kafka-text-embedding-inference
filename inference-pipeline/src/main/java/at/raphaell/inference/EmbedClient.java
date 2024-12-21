@@ -1,5 +1,6 @@
 package at.raphaell.inference;
 
+import at.raphaell.inference.models.ChunkedChunkable;
 import io.grpc.Channel;
 import java.util.List;
 import tei.v1.EmbedGrpc;
@@ -9,7 +10,6 @@ import tei.v1.Tei.EmbedResponse;
 
 public class EmbedClient {
 
-    // TODO use async instead of blocking
     private final EmbedBlockingStub blockingStub;
 
     public EmbedClient(final Channel channel) {

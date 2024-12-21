@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     implementation(project(":inference-pipeline"))
-
+    implementation("ch.qos.logback:logback-classic:1.5.13")
     implementation("com.fasterxml.jackson.core:jackson-core:2.18.1")
     implementation("io.confluent:kafka-streams-json-schema-serde:7.7.1")
     implementation("info.picocli:picocli:4.7.6")

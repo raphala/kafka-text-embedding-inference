@@ -23,6 +23,7 @@ public class InferenceProducer<Key, InputValue, OutputValue> {
     }
 
     public void send(final ProducerRecord<Key, OutputValue> producerRecord) {
+        log.info("Sending embedded message to topic {}", producerRecord.topic());
         this.producer.send(producerRecord, this::sendCallback);
     }
 

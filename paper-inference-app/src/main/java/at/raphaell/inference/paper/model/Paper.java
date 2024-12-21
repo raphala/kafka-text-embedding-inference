@@ -1,6 +1,6 @@
 package at.raphaell.inference.paper.model;
 
-import at.raphaell.inference.Chunkable;
+import at.raphaell.inference.models.Chunkable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record Paper(
