@@ -1,5 +1,6 @@
-package at.raphaell.inference.chunking;
+package at.raphaell.inference.paper;
 
+import at.raphaell.inference.chunking.Chunker;
 import at.raphaell.inference.models.Chunkable;
 import at.raphaell.inference.models.ChunkedChunkable;
 import java.util.ArrayList;

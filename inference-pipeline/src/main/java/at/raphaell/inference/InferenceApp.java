@@ -11,8 +11,10 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serializer;
@@ -25,6 +27,7 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(InferenceApp.class);
     private static final int TERMINATION_TIMEOUT = 60;
     private final List<Thread> threads;
+    private final SerializationConfig serializationConfig;
     private Properties consumerProperties = null;
     private Properties producerProperties = null;
     private InferenceConsumer<Key, InputValue> inferenceConsumer = null;
@@ -37,7 +40,8 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
     @Mixin
     private InferenceArgs inferenceArgs;
 
-    protected InferenceApp() {
+    protected InferenceApp(final SerializationConfig serializationConfig) {
+        this.serializationConfig = serializationConfig;
         this.threads = new ArrayList<>();
     }
 
@@ -53,9 +57,7 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
 
     public abstract Chunker createChunker();
 
-    public abstract Properties createConsumerProperties();
-
-    public abstract Properties createProducerProperties();
+    public abstract String getGroupId();
 
     public abstract Deserializer<Key> getKeyDeserializer();
 
@@ -65,7 +67,38 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
 
     public abstract Serializer<OutputValue> getOutputValueSerializer();
 
-    protected InferenceArgs getInferenceArgs() {
+    protected Properties createProducerProperties() {
+        final Properties properties = new Properties();
+        properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                this.serializationConfig.keySerializerClass().getName());
+        properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                this.serializationConfig.valueSerializerClass().getName());
+        properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, this.getInferenceArgs().getBootstrapServer());
+        properties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
+        properties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
+        if(this.getInferenceArgs().getSchemaRegistry() != null) {
+            properties.setProperty("schema.registry.url", this.getInferenceArgs().getSchemaRegistry());
+        }
+        return properties;
+    }
+
+    protected Properties createConsumerProperties() {
+        final Properties properties = new Properties();
+        properties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+                this.serializationConfig.keySerializerClass().getName());
+        properties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+                this.serializationConfig.valueDeserializerClass().getName());
+        properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, this.getGroupId());
+        properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.getInferenceArgs().getBootstrapServer());
+        properties.setProperty(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, this.getInferenceArgs().getBatchSize());
+        properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        if(this.getInferenceArgs().getSchemaRegistry() != null) {
+            properties.setProperty("schema.registry.url", this.getInferenceArgs().getSchemaRegistry());
+        }
+        return properties;
+    }
+
+    private InferenceArgs getInferenceArgs() {
         return this.inferenceArgs;
     }
 
