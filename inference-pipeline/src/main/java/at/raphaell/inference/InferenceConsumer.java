@@ -22,12 +22,12 @@ public class InferenceConsumer<K, V> {
     // TODO add offset property?
 
     public InferenceConsumer(final Properties consumerProperties, final Deserializer<K> keyDeserializer,
-            final Deserializer<V> valueDeserializer) {
+            final Deserializer<V> valueDeserializer, final String inputTopic) {
         this.offsets = new ConcurrentHashMap<>();
 //        consumerProperties.setProperty("json.value.type", Paper.class.getName());
         this.consumer = new KafkaConsumer<>(consumerProperties, keyDeserializer, valueDeserializer);
-        log.info("Subscribing customer to topic {}", InferenceVar.INPUT_TOPIC);
-        this.consumer.subscribe(List.of(InferenceVar.INPUT_TOPIC));
+        log.info("Subscribing customer to topic {}", inputTopic);
+        this.consumer.subscribe(List.of(inputTopic));
     }
 
     public ConsumerRecords<K, V> poll() {

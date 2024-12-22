@@ -11,66 +11,80 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serializer;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Mixin;
 
-public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValue> {
+@Command
+public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValue> implements Runnable {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(InferenceApp.class);
     private static final int TERMINATION_TIMEOUT = 60;
-    private final Properties consumerProperties;
-    private final Properties producerProperties;
-    private final InferenceConsumer<Key, InputValue> inferenceConsumer;
-    private final InferenceProducer<Key, InputValue, OutputValue> inferenceProducer;
-    private final Chunker chunker;
-    private final ExecutorService executorService;
-    private final EmbedClient embedClient;
     private final List<Thread> threads;
+    private Properties consumerProperties = null;
+    private Properties producerProperties = null;
+    private InferenceConsumer<Key, InputValue> inferenceConsumer = null;
+    private InferenceProducer<Key, InputValue, OutputValue> inferenceProducer = null;
+    private Chunker chunker = null;
+    private ExecutorService executorService = null;
+    private EmbedClient embedClient = null;
     private volatile boolean running = true;
 
-    protected InferenceApp(final InferenceConfig<Key, InputValue, OutputValue> inferenceConfig) {
-        this.consumerProperties = createBaseConsumerProperties();
-        this.producerProperties = createBaseProducerProperties();
-        this.inferenceConsumer =
-                new InferenceConsumer<>(this.consumerProperties, inferenceConfig.keyDeserializer(),
-                        inferenceConfig.valueDeserializer());
-        this.inferenceProducer =
-                new InferenceProducer<>(this.producerProperties, inferenceConfig.keySerializer(),
-                        inferenceConfig.valueSerializer(), this.inferenceConsumer);
-        this.chunker = inferenceConfig.chunker();
-        this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        this.embedClient = new EmbedClient(
-                ManagedChannelBuilder.forAddress(InferenceVar.TEI_HOST, InferenceVar.TEI_PORT)
-                        .usePlaintext()
-                        .build());
+    @Mixin
+    private InferenceArgs inferenceArgs;
+
+    protected InferenceApp() {
         this.threads = new ArrayList<>();
     }
 
-    public static Properties createBaseProducerProperties() {
-        final Properties properties = new Properties();
-        properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, InferenceVar.BOOTSTRAP_SERVER);
-        properties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
-        properties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
-        properties.setProperty("schema.registry.url", InferenceVar.SCHEMA_REGISTRY);
-        return properties;
-    }
-
-    public static Properties createBaseConsumerProperties() {
-        final Properties properties = new Properties();
-        properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, InferenceVar.BOOTSTRAP_SERVER);
-        properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, InferenceVar.GROUP_ID);
-        properties.setProperty(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, InferenceVar.BATCH_SIZE);
-        properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        properties.setProperty("schema.registry.url", InferenceVar.SCHEMA_REGISTRY);
-        return properties;
+    @Override
+    public void run() {
+        this.producerProperties = this.createProducerProperties();
+        this.consumerProperties = this.createConsumerProperties();
+        this.initApp();
+        this.start();
     }
 
     public abstract OutputValue transformMessage(EmbeddedChunkable embeddedChunkable);
 
-    protected void start() {
+    public abstract Chunker createChunker();
+
+    public abstract Properties createConsumerProperties();
+
+    public abstract Properties createProducerProperties();
+
+    public abstract Deserializer<Key> getKeyDeserializer();
+
+    public abstract Deserializer<InputValue> getInputValueDeserializer();
+
+    public abstract Serializer<Key> getKeySerializer();
+
+    public abstract Serializer<OutputValue> getOutputValueSerializer();
+
+    protected InferenceArgs getInferenceArgs() {
+        return this.inferenceArgs;
+    }
+
+    private void initApp() {
+        this.inferenceConsumer =
+                new InferenceConsumer<>(this.consumerProperties, this.getKeyDeserializer(),
+                        this.getInputValueDeserializer(), this.inferenceArgs.getInputTopic());
+        this.inferenceProducer =
+                new InferenceProducer<>(this.producerProperties, this.getKeySerializer(),
+                        this.getOutputValueSerializer(), this.inferenceConsumer);
+        this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        this.embedClient = new EmbedClient(
+                ManagedChannelBuilder.forAddress(this.inferenceArgs.getTeiHost(), this.inferenceArgs.getTeiPort())
+                        .usePlaintext()
+                        .build());
+        this.chunker = this.createChunker();
+    }
+
+    private void start() {
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
 
         while (this.running) {
@@ -96,7 +110,8 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
                     final EmbeddedChunkable embeddedChunkable = new EmbeddedChunkable(chunkedChunkable, embedding);
                     final OutputValue outputValue = this.transformMessage(embeddedChunkable);
                     final ProducerRecord<Key, OutputValue> producerRecord =
-                            new ProducerRecord<>(InferenceVar.OUTPUT_TOPIC, consumerRecord.key(), outputValue);
+                            new ProducerRecord<>(this.inferenceArgs.getOutputTopic(), consumerRecord.key(),
+                                    outputValue);
                     this.inferenceProducer.send(producerRecord);
                 } catch (final RuntimeException exception) {
                     log.error("Could not embed and produce ConsumerRecord", exception);
@@ -133,5 +148,4 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
             this.inferenceProducer.close();
         }
     }
-
 }

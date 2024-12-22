@@ -8,7 +8,6 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.Serializer;
 
-// TODO rename generics
 public class InferenceProducer<Key, InputValue, OutputValue> {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(InferenceProducer.class);
@@ -18,7 +17,6 @@ public class InferenceProducer<Key, InputValue, OutputValue> {
     public InferenceProducer(final Properties producerProperties, final Serializer<Key> keySerializer,
             final Serializer<OutputValue> valueSerializer, final InferenceConsumer<Key, InputValue> inferenceConsumer) {
         this.inferenceConsumer = inferenceConsumer;
-//        producerProperties.setProperty("json.value.type", Paper.class.getName());
         this.producer = new KafkaProducer<>(producerProperties, keySerializer, valueSerializer);
     }
 
