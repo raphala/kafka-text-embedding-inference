@@ -4,6 +4,7 @@ import at.raphaell.inference.chunking.Chunker;
 import at.raphaell.inference.models.Chunkable;
 import at.raphaell.inference.models.ChunkedChunkable;
 import at.raphaell.inference.models.EmbeddedChunkable;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.ManagedChannelBuilder;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,17 +29,16 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
     private static final int TERMINATION_TIMEOUT = 60;
     private final List<Thread> threads;
     private final SerializationConfig serializationConfig;
-    private Properties consumerProperties = null;
-    private Properties producerProperties = null;
-    private InferenceConsumer<Key, InputValue> inferenceConsumer = null;
-    private InferenceProducer<Key, InputValue, OutputValue> inferenceProducer = null;
-    private Chunker chunker = null;
-    private ExecutorService executorService = null;
-    private EmbedClient embedClient = null;
-    private volatile boolean running = true;
-
+    protected Properties consumerProperties = null;
+    protected Properties producerProperties = null;
+    protected InferenceConsumer<Key, InputValue> inferenceConsumer = null;
+    protected InferenceProducer<Key, InputValue, OutputValue> inferenceProducer = null;
+    protected Chunker chunker = null;
+    protected ExecutorService executorService = null;
+    protected EmbedClient embedClient = null;
     @Mixin
-    private InferenceArgs inferenceArgs;
+    protected InferenceArgs inferenceArgs;
+    private volatile boolean running = true;
 
     protected InferenceApp(final SerializationConfig serializationConfig) {
         this.serializationConfig = serializationConfig;
@@ -76,7 +76,7 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
         properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, this.getInferenceArgs().getBootstrapServer());
         properties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
         properties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
-        if(this.getInferenceArgs().getSchemaRegistry() != null) {
+        if (this.getInferenceArgs().getSchemaRegistry() != null) {
             properties.setProperty("schema.registry.url", this.getInferenceArgs().getSchemaRegistry());
         }
         return properties;
@@ -92,17 +92,14 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
         properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.getInferenceArgs().getBootstrapServer());
         properties.setProperty(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, this.getInferenceArgs().getBatchSize());
         properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        if(this.getInferenceArgs().getSchemaRegistry() != null) {
+        if (this.getInferenceArgs().getSchemaRegistry() != null) {
             properties.setProperty("schema.registry.url", this.getInferenceArgs().getSchemaRegistry());
         }
         return properties;
     }
 
-    private InferenceArgs getInferenceArgs() {
-        return this.inferenceArgs;
-    }
-
-    private void initApp() {
+    @VisibleForTesting
+    protected void initApp() {
         this.inferenceConsumer =
                 new InferenceConsumer<>(this.consumerProperties, this.getKeyDeserializer(),
                         this.getInputValueDeserializer(), this.inferenceArgs.getInputTopic());
@@ -115,6 +112,10 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
                         .usePlaintext()
                         .build());
         this.chunker = this.createChunker();
+    }
+
+    private InferenceArgs getInferenceArgs() {
+        return this.inferenceArgs;
     }
 
     private void start() {

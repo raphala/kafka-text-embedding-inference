@@ -16,7 +16,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
-public final class PaperInferenceApp extends InferenceApp<String, Paper, EmbeddedPaper> {
+public class PaperInferenceApp extends InferenceApp<String, Paper, EmbeddedPaper> {
 
     public static final String COLLECTION_NAME = "embeddings";
     @Option(names = "--chunk-size", defaultValue = "1000")
@@ -24,7 +24,7 @@ public final class PaperInferenceApp extends InferenceApp<String, Paper, Embedde
     @Option(names = "--chunk-overlap", defaultValue = "50")
     private int chunkOverlap;
 
-    private PaperInferenceApp() {
+    public PaperInferenceApp() {
         super(new SerializationConfig(StringDeserializer.class, KafkaJsonSchemaSerializer.class, StringSerializer.class,
                 KafkaJsonSchemaSerializer.class));
     }

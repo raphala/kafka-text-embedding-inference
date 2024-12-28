@@ -19,10 +19,12 @@ dependencies {
     implementation("javax.annotation:javax.annotation-api:1.3.2")
     implementation("ch.qos.logback:logback-classic:1.5.13")
     implementation("info.picocli:picocli:4.7.6")
+    implementation("com.google.guava:guava:33.4.0-jre")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.assertj:assertj-core:3.26.3")
+    testImplementation("org.mockito:mockito-core:5.14.2")
 }
 
 protobuf {

@@ -1,0 +1,15 @@
+{
+  "collection_name": "embeddings",
+  "id": "4db1fd01-cb60-443a-9573-13612c772d13",
+  "vector": [
+    1.0,
+    2.0,
+    3.0,
+    4.0
+  ],
+  "payload": {
+    "doi": "10.1016/j.jhazmat.2024.136916",
+    "title": "Transport of particulate mercury along the reservoir- downstream - estuary continuum during the water-sediment regulation scheme period of Yellow River in 2018.",
+    "abstract_chunk": "he influence of WSRS, the Hg content in the sediments of the lower reaches to estuary continuum was affected by the variation of sediment particle size, which was caused by the difference of sediment sources. In addition, WSRS led to a change in the binding forms of Hg in sediments, from mostly binding with organic matter in the XLDR to being comprehensively restricted by organic matter, iron and manganese oxides and carbonate minerals. Therefore, the transport behaviors and deposition patterns of particulate Hg in the reservoir-downstream-estuarine continuum has a good response to the implementation process of WSRS."
+  }
+}
