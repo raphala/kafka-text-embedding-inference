@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: text-embeddings
+  labels:
+    app: text-embeddings
+spec:
+  ports:
+    - port: 50051
+      name: grpc
+      targetPort: 50051
+  selector:
+    app: text-embeddings
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: text-embeddings
+  labels:
+    app: text-embeddings
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: text-embeddings
+  template:
+    metadata:
+      labels:
+        app: text-embeddings
+    spec:
+      containers:
+        - name: text-embeddings
+          image: ghcr.io/huggingface/text-embeddings-inference:1.5.1-grpc
+          imagePullPolicy: Always
+          env:
+            - name: MODEL_ID
+              value: sentence-transformers/all-MiniLM-L6-v2
+            - name: NUM_SHARD
+              value: "1"
+            - name: PORT
+              value: "50051"
+          ports:
+            - containerPort: 50051
+              name: grpc
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+              nvidia.com/gpu: "1"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
