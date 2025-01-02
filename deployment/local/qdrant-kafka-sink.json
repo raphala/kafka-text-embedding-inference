@@ -1,0 +1,17 @@
+{
+  "name": "qdrant-sink-connector",
+  "config": {
+    "connector.class": "io.qdrant.kafka.QdrantSinkConnector",
+    "topics": "inference-test-embedded-paper",
+    "tasks.max": "1",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "true",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "qdrant.host": "qdrant",
+    "qdrant.port": "6334",
+    "qdrant.use_tls": "false",
+    "errors.tolerance": "all"
+  }
+}
