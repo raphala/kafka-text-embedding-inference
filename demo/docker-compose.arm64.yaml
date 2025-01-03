@@ -1,8 +1,8 @@
 version: '3.8'
 services:
   broker:
-    platform: linux/arm64
     image: confluentinc/cp-kafka:7.8.0
+    platform: linux/arm64
     hostname: broker
     container_name: broker
     ports:
@@ -35,6 +35,7 @@ services:
       retries: 10
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.8.0
+    platform: linux/amd64
     hostname: kafka-connect
     container_name: kafka-connect
     depends_on:
@@ -65,6 +66,7 @@ services:
       retries: 10
   console:
     image: docker.redpanda.com/redpandadata/console:v2.8.1
+    platform: linux/amd64
     entrypoint: /bin/sh
     command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
     environment:
@@ -90,8 +92,8 @@ services:
       schema-registry:
         condition: service_started
   init-kafka:
-    platform: linux/arm64
     image: confluentinc/cp-kafka:7.8.0
+    platform: linux/arm64
     depends_on:
       - broker
     entrypoint: [ '/bin/sh', '-c' ]
@@ -109,6 +111,7 @@ services:
       "
   schema-registry:
     image: confluentinc/cp-schema-registry:7.8.0
+    platform: linux/amd64
     hostname: schema-registry
     container_name: schema-registry
     depends_on:
@@ -121,11 +124,12 @@ services:
       SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8081'
   paper-producer:
     image: ghcr.io/raphala/kafka-text-embedding-inference/paper-producer:1.0-SNAPSHOT
+    platform: linux/amd64
     environment:
-        PAGES_COUNT: 5
-        BOOTSTRAP_SERVER: "broker:29092"
-        SCHEMA_REGISTRY: "http://schema-registry:8081"
-        OUTPUT_TOPIC: "inference-test-paper"
+      PAGES_COUNT: 5
+      BOOTSTRAP_SERVER: "broker:29092"
+      SCHEMA_REGISTRY: "http://schema-registry:8081"
+      OUTPUT_TOPIC: "inference-test-paper"
     restart: on-failure
     depends_on:
       broker:
@@ -136,11 +140,13 @@ services:
         condition: service_started
   text-embeddings-inference:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.6.0-grpc
+    platform: linux/amd64
     command: --model-id sentence-transformers/all-MiniLM-L6-v2 --port 50051
     ports:
       - "50051:50051"
   paper-inference-app:
     image: ghcr.io/raphala/kafka-text-embedding-inference/paper-inference-app:1.0-SNAPSHOT
+    platform: linux/amd64
     command: [
       "--batch-size=1",
       "--bootstrap-server=broker:29092",
