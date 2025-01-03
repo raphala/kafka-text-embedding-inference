@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "inference-app"
+version = "0.1.0"
+description = ""
+authors = ["raphala <22345578+raphala@users.noreply.github.com>"]
+readme = "README.md"
+include = [
+    "schemas/*.json"
+]
+
+[tool.poetry.dependencies]
+python = ">=3.10, <3.13"
+confluent-kafka = "^2.6.0"
+requests = "^2.32.3"
+jsonschema = "^4.23.0"
+numpy = "^2.1.3"
+grpcio = "^1.68.1"
+grpcio-tools = "^1.68.1"
+asyncio = "^3.4.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

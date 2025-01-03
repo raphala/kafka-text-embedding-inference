@@ -1,0 +1,96 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Embedded Paper",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "collection_name": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "title": "Not included"
+                },
+                {
+                    "type": "string"
+                }
+            ]
+        },
+        "id": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "title": "Not included"
+                },
+                {
+                    "type": "string"
+                }
+            ]
+        },
+        "vector": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "title": "Not included"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                }
+            ]
+        },
+        "payload": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "title": "Not included"
+                },
+                {
+                    "$ref": "#/definitions/Payload"
+                }
+            ]
+        }
+    },
+    "definitions": {
+        "Payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "doi": {
+                    "oneOf": [
+                        {
+                            "type": "null",
+                            "title": "Not included"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "title": {
+                    "oneOf": [
+                        {
+                            "type": "null",
+                            "title": "Not included"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "abstract_chunk": {
+                    "oneOf": [
+                        {
+                            "type": "null",
+                            "title": "Not included"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
