@@ -28,7 +28,13 @@ tasks.test {
 }
 
 jib {
+    container {
+        mainClass = "at.raphaell.inference.paper.PaperInferenceApp"
+    }
+    from {
+        image = "eclipse-temurin:23-jre"
+    }
     to {
-        image = "us.gcr.io/gcp-bakdata-cluster/kafka-api-inference-test:" + project.version
+        image = "paper-inference-app:" + project.version
     }
 }

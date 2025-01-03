@@ -1,0 +1,167 @@
+version: '3.8'
+services:
+  broker:
+    image: confluentinc/cp-kafka:7.8.0
+    platform: linux/arm64
+    hostname: broker
+    container_name: broker
+    ports:
+      - "9092:9092"
+      - "9091:9091"
+    expose:
+      - "29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'OTjdp8hHSWyUgNak12o9vA'
+    healthcheck:
+      test: nc -z localhost 9092 || exit -1
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:7.8.0
+    platform: linux/amd64
+    hostname: kafka-connect
+    container_name: kafka-connect
+    depends_on:
+      - broker
+      - init-kafka
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "broker:29092"
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: compose-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: compose-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: compose-connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/data/connectors,/usr/share/confluent-hub-components"
+    healthcheck:
+      test: nc -z localhost 8083 || exit -1
+      start_period: 10s
+      interval: 10s
+      timeout: 10s
+      retries: 10
+  console:
+    image: docker.redpanda.com/redpandadata/console:v2.8.1
+    platform: linux/amd64
+    entrypoint: /bin/sh
+    command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["broker:29092"]
+          schemaRegistry:
+            enabled: true
+            urls: ["http://schema-registry:8081"]
+        connect:
+          enabled: true
+          clusters:
+            - name: kafka-connect
+              url: http://kafka-connect:8083
+    ports:
+      - "8080:8080"
+    depends_on:
+      broker:
+        condition: service_healthy
+      kafka-connect:
+        condition: service_healthy
+      schema-registry:
+        condition: service_started
+  init-kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    platform: linux/arm64
+    depends_on:
+      - broker
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server broker:29092 --list
+      
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic inference-test-paper --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server broker:29092 --create --if-not-exists --topic inference-test-embedded-paper --replication-factor 1 --partitions 5
+      
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server broker:29092 --list
+      "
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.8.0
+    platform: linux/amd64
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      - broker
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
+      SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8081'
+  paper-producer:
+    image: ghcr.io/raphala/kafka-text-embedding-inference/paper-producer:1.0-SNAPSHOT
+    platform: linux/amd64
+    environment:
+      PAGES_COUNT: 5
+      BOOTSTRAP_SERVER: "broker:29092"
+      SCHEMA_REGISTRY: "http://schema-registry:8081"
+      OUTPUT_TOPIC: "inference-test-paper"
+    restart: on-failure
+    depends_on:
+      broker:
+        condition: service_healthy
+      schema-registry:
+        condition: service_started
+      init-kafka:
+        condition: service_started
+  text-embeddings-inference:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.6.0-grpc
+    platform: linux/amd64
+    command: --model-id sentence-transformers/all-MiniLM-L6-v2 --port 50051
+    ports:
+      - "50051:50051"
+  paper-inference-app:
+    image: ghcr.io/raphala/kafka-text-embedding-inference/paper-inference-app:1.0-SNAPSHOT
+    platform: linux/amd64
+    command: [
+      "--batch-size=1",
+      "--bootstrap-server=broker:29092",
+      "--schema-registry=http://schema-registry:8081",
+      "--input-topic=inference-test-paper",
+      "--output-topic=inference-test-embedded-paper",
+      "--tei-host=text-embeddings-inference",
+      "--tei-port=50051"
+    ]
+    depends_on:
+      broker:
+        condition: service_healthy
+      schema-registry:
+        condition: service_started
+      init-kafka:
+        condition: service_started
+      paper-producer:
+        condition: service_completed_successfully
