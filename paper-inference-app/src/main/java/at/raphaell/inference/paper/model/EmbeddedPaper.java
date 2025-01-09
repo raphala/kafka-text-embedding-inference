@@ -17,7 +17,8 @@ public record EmbeddedPaper(
         final Paper paper = (Paper) embeddedChunkable.chunkedChunkable().chunkable();
         final Payload paperPayload =
                 new Payload(paper.doi(), paper.title(), embeddedChunkable.chunkedChunkable().textChunk());
-        return new EmbeddedPaper(PaperInferenceApp.COLLECTION_NAME, UUID.randomUUID().toString(), embeddedChunkable.vector(),
+        return new EmbeddedPaper(PaperInferenceApp.COLLECTION_NAME, UUID.randomUUID().toString(),
+                embeddedChunkable.vector(),
                 paperPayload);
     }
 
