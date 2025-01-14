@@ -12,6 +12,7 @@ import at.raphaell.inference.chunking.Chunker;
 import at.raphaell.inference.models.ChunkedChunkable;
 import at.raphaell.inference.models.EmbeddedChunkable;
 import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer;
+import io.confluent.kafka.streams.serdes.json.KafkaJsonSchemaSerde;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -38,7 +39,7 @@ public class TestInferenceApp extends InferenceApp<String, TestChunkable, String
     }
 
     @Override
-    public String transformMessage(final EmbeddedChunkable embeddedChunkable) {
+    public String transformToOutputMessage(final EmbeddedChunkable embeddedChunkable) {
         return embeddedChunkable.chunkedChunkable().textChunk();
     }
 
@@ -59,7 +60,8 @@ public class TestInferenceApp extends InferenceApp<String, TestChunkable, String
 
     @Override
     public Deserializer<TestChunkable> getInputValueDeserializer() {
-        return SerdeUtils.getSerde(TestChunkable.class, (Map) this.createProducerProperties()).deserializer();
+        return SerdeUtils.getConfiguredSerde(() -> new KafkaJsonSchemaSerde<>(TestChunkable.class),
+                (Map) this.createProducerProperties()).deserializer();
     }
 
     @Override

@@ -7,7 +7,6 @@ import com.bakdata.kafka.SerdeConfig;
 import com.bakdata.kafka.StreamsApp;
 import com.bakdata.kafka.StreamsTopicConfig;
 import com.bakdata.kafka.TopologyBuilder;
-import io.confluent.kafka.streams.serdes.json.KafkaJsonSchemaSerde;
 import io.grpc.ManagedChannelBuilder;
 import java.util.Map;
 import javax.annotation.Nullable;

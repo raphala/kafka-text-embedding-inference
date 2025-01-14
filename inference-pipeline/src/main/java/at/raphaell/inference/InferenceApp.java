@@ -53,7 +53,7 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
         this.start();
     }
 
-    public abstract OutputValue transformMessage(EmbeddedChunkable embeddedChunkable);
+    public abstract OutputValue transformToOutputMessage(EmbeddedChunkable embeddedChunkable);
 
     public abstract Chunker createChunker();
 
@@ -142,7 +142,7 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
                     log.info("Sending EmbedRequest to API in new thread");
                     final List<Float> embedding = this.embedClient.embed(chunkedChunkable);
                     final EmbeddedChunkable embeddedChunkable = new EmbeddedChunkable(chunkedChunkable, embedding);
-                    final OutputValue outputValue = this.transformMessage(embeddedChunkable);
+                    final OutputValue outputValue = this.transformToOutputMessage(embeddedChunkable);
                     final ProducerRecord<Key, OutputValue> producerRecord =
                             new ProducerRecord<>(this.inferenceArgs.getOutputTopic(), consumerRecord.key(),
                                     outputValue);
