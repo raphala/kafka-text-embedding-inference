@@ -1,14 +1,13 @@
-package at.raphaell.inference.paper;
+package at.raphaell.inference;
 
-import at.raphaell.inference.InferenceApp;
-import at.raphaell.inference.SerdeUtils;
-import at.raphaell.inference.SerializationConfig;
 import at.raphaell.inference.chunking.Chunker;
+import at.raphaell.inference.model.EmbeddedPaper;
+import at.raphaell.inference.model.Paper;
 import at.raphaell.inference.models.EmbeddedChunkable;
-import at.raphaell.inference.paper.model.EmbeddedPaper;
-import at.raphaell.inference.paper.model.Paper;
-import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer;
+import io.confluent.kafka.serializers.KafkaJsonDeserializer;
+import io.confluent.kafka.serializers.KafkaJsonSerializer;
 import java.util.Map;
+import java.util.Properties;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -25,8 +24,8 @@ public class PaperInferenceApp extends InferenceApp<String, Paper, EmbeddedPaper
     private int chunkOverlap;
 
     public PaperInferenceApp() {
-        super(new SerializationConfig(StringDeserializer.class, KafkaJsonSchemaSerializer.class, StringSerializer.class,
-                KafkaJsonSchemaSerializer.class));
+        super(new SerializationConfig(StringDeserializer.class, KafkaJsonSerializer.class, StringSerializer.class,
+                KafkaJsonSerializer.class));
     }
 
     public static void main(final String[] args) {
@@ -45,7 +44,7 @@ public class PaperInferenceApp extends InferenceApp<String, Paper, EmbeddedPaper
     }
 
     @Override
-    public EmbeddedPaper transformMessage(final EmbeddedChunkable embeddedChunkable) {
+    public EmbeddedPaper transformToOutputMessage(final EmbeddedChunkable embeddedChunkable) {
         return EmbeddedPaper.fromEmbeddedChunkable(embeddedChunkable);
     }
 
@@ -56,7 +55,9 @@ public class PaperInferenceApp extends InferenceApp<String, Paper, EmbeddedPaper
 
     @Override
     public Deserializer<Paper> getInputValueDeserializer() {
-        return SerdeUtils.getSerde(Paper.class, (Map) this.createProducerProperties()).deserializer();
+        final Properties properties = this.createProducerProperties();
+        properties.setProperty("json.value.type", Paper.class.getName());
+        return SerdeUtils.getConfiguredDeserializer(() -> new KafkaJsonDeserializer<>(), (Map) properties);
     }
 
     @Override
@@ -66,7 +67,9 @@ public class PaperInferenceApp extends InferenceApp<String, Paper, EmbeddedPaper
 
     @Override
     public Serializer<EmbeddedPaper> getOutputValueSerializer() {
-        return SerdeUtils.getSerde(Paper.class, (Map) this.createConsumerProperties()).serializer();
+        final Properties properties = this.createProducerProperties();
+        properties.setProperty("json.value.type", EmbeddedPaper.class.getName());
+        return SerdeUtils.getConfiguredSerializer(() -> new KafkaJsonSerializer<>(), (Map) properties);
     }
 
 }

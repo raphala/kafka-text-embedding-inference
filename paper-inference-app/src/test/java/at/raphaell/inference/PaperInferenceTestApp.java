@@ -1,14 +1,11 @@
-package at.raphaell.inference.paper;
+package at.raphaell.inference;
 
 import static org.mockito.ArgumentMatchers.any;
 
-import at.raphaell.inference.EmbedClient;
-import at.raphaell.inference.InferenceConsumer;
-import at.raphaell.inference.InferenceProducer;
+import at.raphaell.inference.model.EmbeddedPaper;
+import at.raphaell.inference.model.Paper;
 import at.raphaell.inference.models.ChunkedChunkable;
-import at.raphaell.inference.paper.model.EmbeddedPaper;
-import at.raphaell.inference.paper.model.Paper;
-import io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializer;
+import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -41,7 +38,7 @@ public class PaperInferenceTestApp extends PaperInferenceApp {
         this.producerProperties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
                 StringDeserializer.class.getName());
         this.producerProperties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                KafkaJsonSchemaDeserializer.class.getName());
+                KafkaJsonDeserializer.class.getName());
         this.producerProperties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "mock://kafka");
         this.producerProperties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
         this.producerProperties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");

@@ -1,4 +1,4 @@
-# Kafka Inference Pipeline
+# Kafka Text Embedding Inference
 
 A streamlined Java library for building Kafka streaming pipelines that generate text embeddings using [huggingface/text-embeddings-inference (TEI)](https://github.com/huggingface/text-embeddings-inference) - a highly optimized inference service.
 
@@ -53,11 +53,11 @@ It also includes a demo environment using Docker Compose to showcase the pipelin
 Start all services by running the command for your system architecture:  
 arm64 (Apple Silicon):  
 ```bash
-docker-compose -f demo/docker-compose.arm64.yaml up
+docker-compose -f paper-inference-app/demo/docker-compose.yaml -f paper-inference-app/demo/docker-compose.arm64.yaml up -d
 ```
 x86/amd64:  
 ```bash
-docker-compose -f demo/docker-compose.yaml up
+docker-compose -f paper-inference-app/demo/docker-compose.yaml up -d
 ```
 > **_Note:_**  Startup may take a few minutes until all services are available
 
@@ -65,8 +65,11 @@ This command launches:
 A fully initialised **Kafka cluster** with topics for input and output  
 A **producer** that automatically fetches and produces papers from Europe PMC API  
 The **huggingface/text-embeddings-inference** service for generating embeddings  
-The **paper-inference-app** for processing papers  
-**Redpanda Console** for monitoring the pipeline
+**Redpanda Console** for monitoring the pipeline  
+**Qdrant Vector Database** for storing embedded papers  
+Configured **Kafka Connect** instance with Qdrant sink connector that automatically writes embedded papers to Qdrant  
+The showcased **paper-inference-app** itself - used for processing and embedding papers
 
 The Redpanda Console dashboard is available at `http://localhost:8080`  
-This interface can be used to observe messages flowing through the pipeline, monitor topics, and inspect messages in real-time.
+This interface can be used to observe messages flowing through the pipeline, monitor topics, and inspect messages in real-time.  
+The Qdrant dashboard is available at `http://localhost:6333/dashboard`

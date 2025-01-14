@@ -1,9 +1,9 @@
-package at.raphaell.inference.paper;
+package at.raphaell.inference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import at.raphaell.inference.paper.model.EmbeddedPaper;
-import at.raphaell.inference.paper.model.Paper;
+import at.raphaell.inference.model.EmbeddedPaper;
+import at.raphaell.inference.model.Paper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;

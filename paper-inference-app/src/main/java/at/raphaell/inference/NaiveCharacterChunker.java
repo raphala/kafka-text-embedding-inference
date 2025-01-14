@@ -1,4 +1,4 @@
-package at.raphaell.inference.paper;
+package at.raphaell.inference;
 
 import at.raphaell.inference.chunking.Chunker;
 import at.raphaell.inference.models.Chunkable;

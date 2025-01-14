@@ -121,7 +121,7 @@ services:
         kafka-topics --bootstrap-server broker:29092 --list
       "
   paper-producer:
-    image: ghcr.io/raphala/kafka-text-embedding-inference/paper-producer:1.0-SNAPSHOT
+    image: ghcr.io/raphala/kafka-text-embedding-inference/paper-producer:0.1.0
     environment:
       PAGES_COUNT: 5
       BOOTSTRAP_SERVER: "broker:29092"
@@ -138,7 +138,7 @@ services:
     ports:
       - "50051:50051"
   paper-inference-app:
-    image: ghcr.io/raphala/kafka-text-embedding-inference/paper-inference-app:1.1-SNAPSHOT
+    image: ghcr.io/raphala/kafka-text-embedding-inference/paper-inference-app:0.1.0
     command:
       [
         "--batch-size=1",

@@ -1,15 +1,15 @@
-package at.raphaell.inference.paper.model;
+package at.raphaell.inference.model;
 
 import at.raphaell.inference.models.Chunkable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record Paper(
         @JsonProperty("title") String title,
-        @JsonProperty("abstract") String abstract_,
+        @JsonProperty("abstract") String abstractText,
         @JsonProperty("doi") String doi
 ) implements Chunkable {
     @Override
     public String getText() {
-        return this.abstract_;
+        return this.abstractText;
     }
 }
