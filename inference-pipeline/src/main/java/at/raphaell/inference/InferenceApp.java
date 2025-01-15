@@ -2,71 +2,136 @@ package at.raphaell.inference;
 
 import at.raphaell.inference.chunking.Chunker;
 import at.raphaell.inference.models.Chunkable;
-import at.raphaell.inference.models.ChunkedChunkable;
 import at.raphaell.inference.models.EmbeddedChunkable;
 import com.google.common.annotations.VisibleForTesting;
 import io.grpc.ManagedChannelBuilder;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serializer;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
 
+/**
+ * Abstract base class for inference applications.
+ *
+ * @param <Key> type of keys used for consumed and produced messages
+ * @param <InputValue> type of input values consumed, must extend {@link Chunkable}
+ * @param <OutputValue> type of output values produced
+ */
 @Command
-public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValue> implements Runnable {
+public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValue> implements Runnable, AutoCloseable {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(InferenceApp.class);
-    private static final int TERMINATION_TIMEOUT = 60;
-    private final List<Thread> threads;
     private final SerializationConfig serializationConfig;
     protected Properties consumerProperties = null;
     protected Properties producerProperties = null;
     protected InferenceConsumer<Key, InputValue> inferenceConsumer = null;
     protected InferenceProducer<Key, InputValue, OutputValue> inferenceProducer = null;
     protected Chunker chunker = null;
-    protected ExecutorService executorService = null;
     protected EmbedClient embedClient = null;
+    protected InferenceProcessor inferenceProcessor = null;
     @Mixin
     protected InferenceArgs inferenceArgs;
     private volatile boolean running = true;
 
+    /**
+     * Constructs an {@code InferenceApp} with the specified serialization configuration.
+     *
+     * @param serializationConfig serialization configuration
+     */
     protected InferenceApp(final SerializationConfig serializationConfig) {
         this.serializationConfig = serializationConfig;
-        this.threads = new ArrayList<>();
     }
 
     @Override
     public void run() {
+        // the command-line arguments have been parsed by picocli at this point
         this.producerProperties = this.createProducerProperties();
+        log.info("Initializing app with producer properties: {}", this.producerProperties);
         this.consumerProperties = this.createConsumerProperties();
+        log.info("Initializing app with consumer properties: {}", this.consumerProperties);
         this.initApp();
         this.start();
     }
 
+    /**
+     * Transforms a chunked and embedded input value {@link EmbeddedChunkable} into the output message type.
+     *
+     * @param embeddedChunkable embedded chunkable to transform
+     * @return transformed output value
+     */
     public abstract OutputValue transformToOutputMessage(EmbeddedChunkable embeddedChunkable);
 
+    /**
+     * Creates a {@link Chunker} for chunking consumed messages.
+     */
     public abstract Chunker createChunker();
 
+    /**
+     * Returns the group ID for the Kafka consumer group.
+     */
     public abstract String getGroupId();
 
+    /**
+     * Provides the deserializer for message keys.
+     */
     public abstract Deserializer<Key> getKeyDeserializer();
 
+    /**
+     * Provides the deserializer for input values.
+     */
     public abstract Deserializer<InputValue> getInputValueDeserializer();
 
+    /**
+     * Provides the serializer for message keys.
+     */
     public abstract Serializer<Key> getKeySerializer();
 
+    /**
+     * Provides the serializer for output values.
+     */
     public abstract Serializer<OutputValue> getOutputValueSerializer();
 
+    public InferenceConsumer<Key, InputValue> getInferenceConsumer() {
+        return this.inferenceConsumer;
+    }
+
+    public InferenceProducer<Key, InputValue, OutputValue> getInferenceProducer() {
+        return this.inferenceProducer;
+    }
+
+    public Chunker getChunker() {
+        return this.chunker;
+    }
+
+    public EmbedClient getEmbedClient() {
+        return this.embedClient;
+    }
+
+    public InferenceArgs getInferenceArgs() {
+        return this.inferenceArgs;
+    }
+
+    public boolean isRunning() {
+        return this.running;
+    }
+
+    /**
+     * Shuts down the application gracefully by closing the Kafka consumer and producer.
+     */
+    @Override
+    public void close() {
+        this.running = false;
+        this.inferenceConsumer.close();
+        this.inferenceProducer.close();
+    }
+
+    /**
+     * Creates common producer properties for the Kafka producer and might be overwritten, if necessary. Must be called
+     * after command-line arguments have been parsed and fields are populated.
+     */
     protected Properties createProducerProperties() {
         final Properties properties = new Properties();
         properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
@@ -82,6 +147,10 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
         return properties;
     }
 
+    /**
+     * Creates common consumer properties for the Kafka consumer and might be overwritten, if necessary. Must be called
+     * after command-line arguments have been parsed and fields are populated.
+     */
     protected Properties createConsumerProperties() {
         final Properties properties = new Properties();
         properties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
@@ -98,6 +167,9 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
         return properties;
     }
 
+    /**
+     * Initializes the application components. Increased visibility for testing purposes.
+     */
     @VisibleForTesting
     protected void initApp() {
         this.inferenceConsumer =
@@ -106,80 +178,22 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
         this.inferenceProducer =
                 new InferenceProducer<>(this.producerProperties, this.getKeySerializer(),
                         this.getOutputValueSerializer(), this.inferenceConsumer);
-        this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         this.embedClient = new EmbedClient(
                 ManagedChannelBuilder.forAddress(this.inferenceArgs.getTeiHost(), this.inferenceArgs.getTeiPort())
                         .usePlaintext()
                         .build());
         this.chunker = this.createChunker();
-    }
-
-    private InferenceArgs getInferenceArgs() {
-        return this.inferenceArgs;
+        this.inferenceProcessor = new InferenceProcessor(this);
     }
 
     private void start() {
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+        log.info("Starting inference app");
+        // add shutdown hook to gracefully shut down the application
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 
+        // start the main message processing loop
         while (this.running) {
-            final ConsumerRecords<Key, InputValue> consumerRecords = this.inferenceConsumer.poll();
-            if (consumerRecords.count() == 0) {
-                continue;
-            }
-            log.info("Polled {} records", consumerRecords.count());
-            consumerRecords.forEach(this::processRecord);
-            this.joinThreads();
-            this.inferenceConsumer.commit();
-        }
-    }
-
-    private void processRecord(final ConsumerRecord<Key, InputValue> consumerRecord) {
-        final List<ChunkedChunkable> chunks = this.chunker.chunkText(consumerRecord.value());
-        log.info("Processing record split into {} chunks", chunks.size());
-        for (final ChunkedChunkable chunkedChunkable : chunks) {
-            final Thread thread = Thread.startVirtualThread(() -> {
-                try {
-                    log.info("Sending EmbedRequest to API in new thread");
-                    final List<Float> embedding = this.embedClient.embed(chunkedChunkable);
-                    final EmbeddedChunkable embeddedChunkable = new EmbeddedChunkable(chunkedChunkable, embedding);
-                    final OutputValue outputValue = this.transformToOutputMessage(embeddedChunkable);
-                    final ProducerRecord<Key, OutputValue> producerRecord =
-                            new ProducerRecord<>(this.inferenceArgs.getOutputTopic(), consumerRecord.key(),
-                                    outputValue);
-                    this.inferenceProducer.send(producerRecord);
-                } catch (final RuntimeException exception) {
-                    log.error("Could not embed and produce ConsumerRecord", exception);
-                }
-            });
-            this.threads.add(thread);
-        }
-    }
-
-    private void joinThreads() {
-        this.threads.forEach(thread -> {
-            try {
-                thread.join();
-            } catch (final InterruptedException exception) {
-                Thread.currentThread().interrupt();
-                log.error("Main thread interrupted", exception);
-            }
-        });
-        this.threads.clear();
-    }
-
-    private void shutdown() {
-        this.running = false;
-        try {
-            this.executorService.shutdown();
-            if (!this.executorService.awaitTermination(TERMINATION_TIMEOUT, TimeUnit.SECONDS)) {
-                this.executorService.shutdownNow();
-            }
-        } catch (final InterruptedException exception) {
-            this.executorService.shutdownNow();
-            Thread.currentThread().interrupt();
-        } finally {
-            this.inferenceConsumer.close();
-            this.inferenceProducer.close();
+            this.inferenceProcessor.pollRecords();
         }
     }
 }

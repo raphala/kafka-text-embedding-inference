@@ -8,7 +8,6 @@ import at.raphaell.inference.models.ChunkedChunkable;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.Executors;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.MockProducer;
@@ -44,10 +43,10 @@ public class PaperInferenceTestApp extends PaperInferenceApp {
         this.producerProperties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
         this.inferenceConsumer = new InferenceConsumer<>(this.mockConsumer, "input");
         this.inferenceProducer = new InferenceProducer<>(this.mockProducer, this.inferenceConsumer);
-        this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         final EmbedClient mockEmbedClient = Mockito.mock(EmbedClient.class);
         Mockito.when(mockEmbedClient.embed(any(ChunkedChunkable.class))).thenReturn(mockEmbedding);
         this.embedClient = mockEmbedClient;
         this.chunker = this.createChunker();
+        this.inferenceProcessor = new InferenceProcessor(this);
     }
 }

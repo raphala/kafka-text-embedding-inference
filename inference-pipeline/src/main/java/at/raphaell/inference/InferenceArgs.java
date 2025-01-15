@@ -2,6 +2,9 @@ package at.raphaell.inference;
 
 import picocli.CommandLine.Option;
 
+/**
+ * Command-line arguments for configuring the inference application.
+ */
 public class InferenceArgs {
 
     @Option(names = "--batch-size", defaultValue = "1")

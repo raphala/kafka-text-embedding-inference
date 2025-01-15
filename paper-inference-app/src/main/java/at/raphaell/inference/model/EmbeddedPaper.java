@@ -7,6 +7,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * JSON schema that represents an embedded paper containing metadata and an embedding vector. This schema aligns with
+ * the expected input format for the Qdrant vector database Kafka sink.
+ */
 public record EmbeddedPaper(
         @JsonProperty("collection_name") String collectionName,
         @JsonProperty("id") String id,
@@ -24,6 +28,9 @@ public record EmbeddedPaper(
                 paperPayload);
     }
 
+    /**
+     * The payload contains data about the embedded paper itself.
+     */
     private record Payload(
             @JsonProperty("doi") String doi,
             @JsonProperty("title") String title,
