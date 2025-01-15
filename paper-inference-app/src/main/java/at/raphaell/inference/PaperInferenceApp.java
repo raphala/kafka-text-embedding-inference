@@ -88,7 +88,7 @@ public class PaperInferenceApp extends InferenceApp<String, Paper, EmbeddedPaper
         final Properties properties = this.createProducerProperties();
         // this needs to be set in order for the Deserializer to know the type of the deserialized object
         properties.setProperty("json.value.type", Paper.class.getName());
-        return SerdeUtils.getConfiguredDeserializer(() -> new KafkaJsonDeserializer<>(), (Map) properties);
+        return SerdeUtils.getConfiguredDeserializer(KafkaJsonDeserializer::new, (Map) properties);
     }
 
 
@@ -108,7 +108,7 @@ public class PaperInferenceApp extends InferenceApp<String, Paper, EmbeddedPaper
         final Properties properties = this.createProducerProperties();
         // this needs to be set in order for the Serializer to know the type of the serialized object
         properties.setProperty("json.value.type", EmbeddedPaper.class.getName());
-        return SerdeUtils.getConfiguredSerializer(() -> new KafkaJsonSerializer<>(), (Map) properties);
+        return SerdeUtils.getConfiguredSerializer(KafkaJsonSerializer::new, (Map) properties);
     }
 
 }

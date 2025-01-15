@@ -31,14 +31,15 @@ This library handles the data preparation phase of typical Retrieval Augmented G
 --batch-size         # Kafka batch size (default: 1)
 --bootstrap-server   # Kafka bootstrap server address
 --schema-registry    # Schema registry URL
---input-topic       # Kafka input topic
---output-topic      # Kafka output topic
---tei-host          # TEI service host
---tei-port          # TEI service port (default: 50051)
+--input-topic        # Kafka input topic
+--output-topic       # Kafka output topic
+--tei-host           # TEI service host
+--tei-port           # TEI service port (default: 50051)
 ```
 
+<br>  
 
-### Demo setup: paper-inference-app
+## Demo setup: paper-inference-app
 
 An example implementation that demonstrates how to use the library to:
 - Process academic papers from Kafka
@@ -49,9 +50,9 @@ It also includes a demo environment using Docker Compose to showcase the pipelin
 
 #### Prerequisites:
 - Docker and Docker Compose installed
- 
+
 Start all services by running the command for your system architecture:  
-arm64 (Apple Silicon):  
+arm64 (e.g. Apple Silicon):  
 ```bash
 docker-compose -f paper-inference-app/demo/docker-compose.yaml -f paper-inference-app/demo/docker-compose.arm64.yaml up -d
 ```

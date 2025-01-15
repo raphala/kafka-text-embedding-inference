@@ -1,0 +1,29 @@
+[versions]
+grpc = "1.53.0"
+kafka = "3.9.0"
+jackson = "2.18.1"
+confluentJson = "7.8.0"
+javax = "1.3.2"
+logback = "1.5.13"
+picocli = "4.7.6"
+junit = "5.10.0"
+assertj = "3.26.3"
+mockito = "5.14.2"
+
+[libraries]
+kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
+kafka = { module = "org.apache.kafka:kafka_2.13", version.ref = "kafka" }
+grpc-netty = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
+grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
+grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
+confluent-json-schema-serde = { module = "io.confluent:kafka-streams-json-schema-serde", version.ref = "confluentJson" }
+confluent-json-serializer = { module = "io.confluent:kafka-json-serializer", version.ref = "confluentJson" }
+javax-annotation = { module = "javax.annotation:javax.annotation-api", version.ref = "javax" }
+logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
+
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }

@@ -11,20 +11,19 @@ repositories {
 }
 
 dependencies {
-    implementation("org.apache.kafka:kafka-clients:3.9.0")
-    implementation("io.grpc:grpc-netty-shaded:1.53.0")
-    implementation("io.grpc:grpc-protobuf:1.53.0")
-    implementation("io.grpc:grpc-stub:1.53.0")
-    implementation("io.confluent:kafka-streams-json-schema-serde:7.7.1")
-    implementation("javax.annotation:javax.annotation-api:1.3.2")
-    implementation("ch.qos.logback:logback-classic:1.5.13")
-    implementation("info.picocli:picocli:4.7.6")
-    implementation("com.google.guava:guava:33.4.0-jre")
+    implementation(libs.kafka.clients)
+    implementation(libs.grpc.netty)
+    implementation(libs.grpc.protobuf)
+    implementation(libs.grpc.stub)
+    implementation(libs.confluent.json.schema.serde)
+    implementation(libs.javax.annotation)
+    implementation(libs.logback)
+    implementation(libs.picocli)
 
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.assertj:assertj-core:3.26.3")
-    testImplementation("org.mockito:mockito-core:5.14.2")
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.assertj)
+    testImplementation(libs.mockito)
 }
 
 protobuf {

@@ -23,7 +23,7 @@ public final class SerdeUtils {
      * @param <T> type handled by the Serde
      * @return the configured Serde
      */
-    public static <T> Serde<T> getConfiguredSerde(final Supplier<Serde<T>> serdeSupplier,
+    public static <T> Serde<T> getConfiguredSerde(final Supplier<? extends Serde<T>> serdeSupplier,
             final Map<String, Object> config) {
         final Serde<T> serde = serdeSupplier.get();
         serde.configure(config, false);
@@ -38,7 +38,7 @@ public final class SerdeUtils {
      * @param <T> type handled by the Serializer
      * @return configured Serializer
      */
-    public static <T> Serializer<T> getConfiguredSerializer(final Supplier<Serializer<T>> supplier,
+    public static <T> Serializer<T> getConfiguredSerializer(final Supplier<? extends Serializer<T>> supplier,
             final Map<String, Object> config) {
         final Serializer<T> serde = supplier.get();
         serde.configure(config, false);
@@ -53,7 +53,7 @@ public final class SerdeUtils {
      * @param <T> type handled by the Deserializer
      * @return configured Deserializer
      */
-    public static <T> Deserializer<T> getConfiguredDeserializer(final Supplier<Deserializer<T>> supplier,
+    public static <T> Deserializer<T> getConfiguredDeserializer(final Supplier<? extends Deserializer<T>> supplier,
             final Map<String, Object> config) {
         final Deserializer<T> serde = supplier.get();
         serde.configure(config, false);

@@ -31,9 +31,9 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
     protected InferenceProducer<Key, InputValue, OutputValue> inferenceProducer = null;
     protected Chunker chunker = null;
     protected EmbedClient embedClient = null;
-    protected InferenceProcessor inferenceProcessor = null;
+    protected InferenceProcessor<Key, InputValue, OutputValue> inferenceProcessor = null;
     @Mixin
-    protected InferenceArgs inferenceArgs;
+    private InferenceArgs inferenceArgs;
     private volatile boolean running = true;
 
     /**
@@ -114,10 +114,6 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
         return this.inferenceArgs;
     }
 
-    public boolean isRunning() {
-        return this.running;
-    }
-
     /**
      * Shuts down the application gracefully by closing the Kafka consumer and producer.
      */
@@ -183,7 +179,7 @@ public abstract class InferenceApp<Key, InputValue extends Chunkable, OutputValu
                         .usePlaintext()
                         .build());
         this.chunker = this.createChunker();
-        this.inferenceProcessor = new InferenceProcessor(this);
+        this.inferenceProcessor = new InferenceProcessor<>(this);
     }
 
     private void start() {

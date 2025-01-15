@@ -12,16 +12,17 @@ repositories {
 
 dependencies {
     implementation(project(":inference-pipeline"))
-    implementation("ch.qos.logback:logback-classic:1.5.13")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.18.1")
-    implementation("info.picocli:picocli:4.7.6")
-    implementation("io.confluent:kafka-json-serializer:7.8.0")
-    implementation("org.apache.kafka:kafka_2.13:3.9.0")
 
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.assertj:assertj-core:3.26.3")
-    testImplementation("org.mockito:mockito-core:5.14.2")
+    implementation(libs.logback)
+    implementation(libs.jackson.core)
+    implementation(libs.picocli)
+    implementation(libs.confluent.json.serializer)
+    implementation(libs.kafka)
+
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.assertj)
+    testImplementation(libs.mockito)
 }
 
 tasks.test {

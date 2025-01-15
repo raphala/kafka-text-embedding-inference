@@ -18,6 +18,9 @@ public record EmbeddedPaper(
         @JsonProperty("payload") Payload payload
 ) {
 
+    /**
+     * Creates an {@code EmbeddedPaper} from an {@link EmbeddedChunkable} by extracting the vector and payload.
+     */
     public static EmbeddedPaper fromEmbeddedChunkable(final EmbeddedChunkable embeddedChunkable) {
         final ChunkedChunkable chunkedChunkable = embeddedChunkable.chunkedChunkable();
         final Paper paper = (Paper) chunkedChunkable.chunkable();
