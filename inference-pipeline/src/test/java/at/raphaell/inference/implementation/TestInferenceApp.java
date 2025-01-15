@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import at.raphaell.inference.EmbedClient;
 import at.raphaell.inference.InferenceApp;
 import at.raphaell.inference.InferenceConsumer;
+import at.raphaell.inference.InferenceProcessor;
 import at.raphaell.inference.InferenceProducer;
 import at.raphaell.inference.SerdeUtils;
 import at.raphaell.inference.SerializationConfig;
@@ -12,10 +13,10 @@ import at.raphaell.inference.chunking.Chunker;
 import at.raphaell.inference.models.ChunkedChunkable;
 import at.raphaell.inference.models.EmbeddedChunkable;
 import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer;
+import io.confluent.kafka.streams.serdes.json.KafkaJsonSchemaSerde;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Executors;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.MockProducer;
@@ -38,7 +39,7 @@ public class TestInferenceApp extends InferenceApp<String, TestChunkable, String
     }
 
     @Override
-    public String transformMessage(final EmbeddedChunkable embeddedChunkable) {
+    public String transformToOutputMessage(final EmbeddedChunkable embeddedChunkable) {
         return embeddedChunkable.chunkedChunkable().textChunk();
     }
 
@@ -59,7 +60,8 @@ public class TestInferenceApp extends InferenceApp<String, TestChunkable, String
 
     @Override
     public Deserializer<TestChunkable> getInputValueDeserializer() {
-        return SerdeUtils.getSerde(TestChunkable.class, (Map) this.createProducerProperties()).deserializer();
+        return SerdeUtils.getConfiguredSerde(() -> new KafkaJsonSchemaSerde<>(TestChunkable.class),
+                (Map) this.createProducerProperties()).deserializer();
     }
 
     @Override
@@ -94,10 +96,10 @@ public class TestInferenceApp extends InferenceApp<String, TestChunkable, String
         this.producerProperties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
         this.inferenceConsumer = new InferenceConsumer<>(this.mockConsumer, "input");
         this.inferenceProducer = new InferenceProducer<>(this.mockProducer, this.inferenceConsumer);
-        this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         final EmbedClient mockEmbedClient = Mockito.mock(EmbedClient.class);
         Mockito.when(mockEmbedClient.embed(any(ChunkedChunkable.class))).thenReturn(mockEmbedding);
         this.embedClient = mockEmbedClient;
         this.chunker = this.createChunker();
+        this.inferenceProcessor = new InferenceProcessor(this);
     }
 }
