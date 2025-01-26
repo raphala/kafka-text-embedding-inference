@@ -9,6 +9,7 @@ picocli = "4.7.6"
 junit = "5.10.0"
 assertj = "3.26.3"
 mockito = "5.14.2"
+langchain = "0.36.2"
 
 [libraries]
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
@@ -22,6 +23,8 @@ confluent-json-serializer = { module = "io.confluent:kafka-json-serializer", ver
 javax-annotation = { module = "javax.annotation:javax.annotation-api", version.ref = "javax" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
+langchain = { module = "dev.langchain4j:langchain4j", version.ref = "langchain" }
+langchain-embedding = { module = "dev.langchain4j:langchain4j-embeddings", version.ref = "langchain" }
 
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }

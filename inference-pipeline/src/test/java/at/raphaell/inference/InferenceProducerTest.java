@@ -27,6 +27,7 @@ class InferenceProducerTest {
 
     @BeforeEach
     void setup() {
+        // Initialize mock producer and consumer
         this.mockProducer = new MockProducer<>(true, new StringSerializer(), new StringSerializer());
         this.mockConsumer = new MockConsumer<>(OffsetResetStrategy.EARLIEST);
         this.producerProperties = new Properties();

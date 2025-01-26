@@ -1,5 +1,7 @@
 # Kafka Text Embedding Inference
 
+> **_Note:_**  This project is part of my bachelor thesis at the University of Vienna. The thesis and presentation can be found in the `documents` directory.
+
 A streamlined Java library for building Kafka streaming pipelines that generate text embeddings using [huggingface/text-embeddings-inference (TEI)](https://github.com/huggingface/text-embeddings-inference) - a highly optimized inference service.
 
 This library handles the data preparation phase of typical Retrieval Augmented Generation (RAG) pipelines in Kafka by efficiently processing and embedding text at scale.
@@ -74,3 +76,12 @@ The showcased **paper-inference-app** itself - used for processing and embedding
 The Redpanda Console dashboard is available at `http://localhost:8080`  
 This interface can be used to observe messages flowing through the pipeline, monitor topics, and inspect messages in real-time.  
 The Qdrant dashboard is available at `http://localhost:6333/dashboard`
+
+Overview of the services running in the demo setup, when fully initialized:  
+![Overview of Services](docs/images/container_overview.png)
+Redpanda Console dashboard providing insights into existing topics:  
+![Redpanda Topics](docs/images/redpanda_topics.png)
+The input topic, that contains papers fetched from Europe PMC:
+![Redpanda Input Topic](docs/images/redpanda_input_topic.png)
+This output topic contains embedded papers, ready to be written to Qdrant:
+![Redpanda Output Topic](docs/images/redpanda_output_topic.png)

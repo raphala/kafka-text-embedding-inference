@@ -18,6 +18,8 @@ dependencies {
     implementation(libs.picocli)
     implementation(libs.confluent.json.serializer)
     implementation(libs.kafka)
+    implementation(libs.langchain)
+    implementation(libs.langchain.embedding)
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)

@@ -17,8 +17,10 @@ import tei.v1.Tei.EmbedResponse;
 
 class EmbedClientTest {
 
+    // Create a mock of the EmbedGrpc.EmbedBlockingStub class
     @Mock
     private EmbedGrpc.EmbedBlockingStub blockingStub = mock(EmbedGrpc.EmbedBlockingStub.class);
+    // Pass the mock to the EmbedClient constructor
     private final EmbedClient embedClient = new EmbedClient(this.blockingStub);
 
     @Test
@@ -30,16 +32,20 @@ class EmbedClientTest {
                 .setTruncate(true)
                 .build();
 
+        // Create a mock response with a list of floats
         final List<Float> mockEmbeddings = Arrays.asList(0.1f, 0.2f, 0.3f);
         final EmbedResponse mockResponse = EmbedResponse.newBuilder()
                 .addAllEmbeddings(mockEmbeddings)
                 .build();
 
+        // Mock the embed method of the blocking stub to return the mock response
         when(this.blockingStub.embed(expectedRequest)).thenReturn(mockResponse);
 
         final List<Float> result = this.embedClient.embed(chunkedChunkable);
 
+        // Assert that the result is equal to the mock response
         assertThat(mockEmbeddings).isEqualTo(result);
+        // Verify that the embed method of the blocking stub was called with the expected request
         verify(this.blockingStub).embed(expectedRequest);
     }
 

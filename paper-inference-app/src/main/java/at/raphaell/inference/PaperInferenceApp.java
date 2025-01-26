@@ -25,7 +25,7 @@ public class PaperInferenceApp extends InferenceApp<String, Paper, EmbeddedPaper
      * Name of the Qdrant database collection to store the embeddings in.
      */
     public static final String COLLECTION_NAME = "embeddings";
-    @Option(names = "--chunk-size", defaultValue = "1000")
+    @Option(names = "--chunk-size", defaultValue = "500")
     private int chunkSize;
     @Option(names = "--chunk-overlap", defaultValue = "50")
     private int chunkOverlap;
@@ -53,7 +53,12 @@ public class PaperInferenceApp extends InferenceApp<String, Paper, EmbeddedPaper
      */
     @Override
     public Chunker createChunker() {
-        return new NaiveCharacterChunker(this.chunkSize, this.chunkOverlap);
+        // The NaiveCharacterChunker is a simple chunker that splits text into chunks of a fixed size with a fixed
+        // it was used during testing to get comparable results with other implementations
+        // return new NaiveCharacterChunker(this.chunkSize, this.chunkOverlap);
+        // For demo purposes, we use the more sophisticated LangChainChunker, based on langchain4j's
+        // DocumentByParagraphSplitter
+        return new RecursiveTokenChunker(this.chunkSize, this.chunkOverlap);
     }
 
     /**
