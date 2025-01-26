@@ -22,6 +22,7 @@ class InferenceAppTest {
 
     @BeforeEach
     void setup() throws InterruptedException {
+        // Set up the test inference app
         this.testApp = new TestInferenceApp();
         final String[] args = {
                 "--input-topic", INPUT_TOPIC,
@@ -40,7 +41,8 @@ class InferenceAppTest {
     }
 
     @Test
-    void testProcessing() throws InterruptedException {
+    void shouldProcessRecords() throws InterruptedException {
+        // Create two records with Chunkable values and add them to the input topic
         final ConsumerRecord<String, TestChunkable> record1 =
                 new ConsumerRecord<>(INPUT_TOPIC, 0, 0L, "key1", new TestChunkable("chunkable1"));
         final ConsumerRecord<String, TestChunkable> record2 =
@@ -51,10 +53,12 @@ class InferenceAppTest {
         this.testApp.getMockConsumer().addRecord(record1);
         this.testApp.getMockConsumer().addRecord(record2);
 
+        // Wait for the records to be processed
         Thread.sleep(1000);
 
         final List<ProducerRecord<String, String>> producedRecords = this.testApp.getMockProducer().history();
 
+        // Assert that two records matching the input were produced to the output topic
         assertThat(producedRecords).hasSize(2);
 
         assertThat(producedRecords)

@@ -60,6 +60,7 @@ public class TestInferenceApp extends InferenceApp<String, TestChunkable, String
 
     @Override
     public Deserializer<TestChunkable> getInputValueDeserializer() {
+        // Use KafkaJsonSchemaSerde to deserialize TestChunkable
         return SerdeUtils.getConfiguredSerde(() -> new KafkaJsonSchemaSerde<>(TestChunkable.class),
                 (Map) this.createProducerProperties()).deserializer();
     }
@@ -84,6 +85,7 @@ public class TestInferenceApp extends InferenceApp<String, TestChunkable, String
 
     @Override
     protected void initApp() {
+        // Set up test application with mock producer and mock consumer
         this.mockProducer = new MockProducer<>(true, new StringSerializer(), new StringSerializer());
         this.mockConsumer = new MockConsumer<>(OffsetResetStrategy.EARLIEST);
         this.producerProperties = new Properties();
@@ -96,6 +98,7 @@ public class TestInferenceApp extends InferenceApp<String, TestChunkable, String
         this.producerProperties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
         this.inferenceConsumer = new InferenceConsumer<>(this.mockConsumer, "input");
         this.inferenceProducer = new InferenceProducer<>(this.mockProducer, this.inferenceConsumer);
+        // Set up mock embed client, so we can mock the API
         final EmbedClient mockEmbedClient = Mockito.mock(EmbedClient.class);
         Mockito.when(mockEmbedClient.embed(any(ChunkedChunkable.class))).thenReturn(mockEmbedding);
         this.embedClient = mockEmbedClient;

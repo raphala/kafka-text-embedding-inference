@@ -56,7 +56,7 @@ public class PaperInferenceAppTest {
         this.testApp.getMockConsumer().rebalance(List.of(topicPartition));
         this.testApp.getMockConsumer().addRecord(paperRecord);
 
-        Thread.sleep(1000);
+        Thread.sleep(5000);
 
         final List<ProducerRecord<String, EmbeddedPaper>> producedRecords = this.testApp.getMockProducer().history();
 

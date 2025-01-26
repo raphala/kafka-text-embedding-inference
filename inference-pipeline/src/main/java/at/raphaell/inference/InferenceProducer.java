@@ -72,12 +72,11 @@ public class InferenceProducer<Key, InputValue, OutputValue> {
         if (exception != null) {
             // for now, we just log the error, in the future we might want to create dead letters
             log.error("Message could not be produced", exception);
-        } else {
-            final TopicPartition topicPartition = new TopicPartition(metadata.topic(), metadata.partition());
-            final OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(metadata.offset() + 1);
-            // if the message was produced successfully, the offset is added to the commit map
-            this.inferenceConsumer.addOffset(topicPartition, offsetAndMetadata);
         }
+        final TopicPartition topicPartition = new TopicPartition(metadata.topic(), metadata.partition());
+        final OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(metadata.offset() + 1);
+        // if the message was produced successfully, the offset is added to the commit map
+        this.inferenceConsumer.addOffset(topicPartition, offsetAndMetadata);
     }
 
 }
