@@ -79,9 +79,12 @@ The Qdrant dashboard is available at `http://localhost:6333/dashboard`
 
 Overview of the services running in the demo setup, when fully initialized:  
 ![Overview of Services](docs/images/container_overview.png)
+
 The Redpanda Console dashboard provides insight into the Kafka workflow. The screenshot shows the two main topics used by the demo application. The 'inference-test-paper' topic contains the input messages for the demo application. The 'inference-test-embedded-paper' topic contains the output messages written by the demo application.
-![Redpanda Topics](docs/images/redpanda_topics.png)
+![Redpanda Topics](docs/images/redpanda_topics.png)   
+
 The 'inference-test-paper' input topic, which contains papers written by the 'paper-producer' producer application. This application downloads and produces papers from Europe PMC.
-![Redpanda Input Topic](docs/images/redpanda_input_topic.png)
+![Redpanda Input Topic](docs/images/redpanda_input_topic.png)   
+
 This screenshot shows the output topic 'inference-test-embedded-paper'. These messages are the output written by the demo application. They contain the vector embedding along with information from the input message and are in a JSON format compatible with the Qdrant vector database.
-![Redpanda Output Topic](docs/images/redpanda_output_topic.png)
+![Redpanda Output Topic](docs/images/redpanda_output_topic.png)   
